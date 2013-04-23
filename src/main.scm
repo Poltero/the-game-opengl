@@ -78,13 +78,13 @@ end-of-shader
                (vertex-data-vector '#f32(
                                          50.0 50.0 0.0 0.0
                                          150.0 50.0 0.0 1.0
-                                         150.0 100.0 1.0 1.0
-                                         50.0 100.0 1.0 0.0))
+                                         150.0 145.0 1.0 1.0
+                                         50.0 145.0 1.0 0.0))
                (vertex-data (f32vector->GLfloat* vertex-data-vector))
                (shaders (list (fusion:create-shader GL_VERTEX_SHADER vertex-shader)
                               (fusion:create-shader GL_FRAGMENT_SHADER fragment-shader)))
                (shader-program (fusion:create-program shaders))
-               (texture-image* (SDL_LoadBMP "assets/128x128.bmp")))
+               (texture-image* (SDL_LoadBMP "assets/128x128sg.bmp")))
           ;; Clean up shaders once the program has been compiled and linked
           (for-each glDeleteShader shaders)
 
@@ -166,16 +166,16 @@ end-of-shader
                            (event-loop)))
 
                    ;; -- Game logic --
-                   (let ((GLfloat*-increment
-                          (lambda (n x) (GLfloat*-set! vertex-data n (+ (GLfloat*-ref vertex-data n) x)))))
-                     (GLfloat*-increment 0 1.0)
-                     (GLfloat*-increment 1 1.0)
-                     (GLfloat*-increment 4 1.0)
-                     (GLfloat*-increment 5 1.0)
-                     (GLfloat*-increment 8 1.0)
-                     (GLfloat*-increment 9 1.0)
-                     (GLfloat*-increment 12 1.0)
-                     (GLfloat*-increment 13 1.0))
+                   ;; (let ((GLfloat*-increment
+                   ;;        (lambda (n x) (GLfloat*-set! vertex-data n (+ (GLfloat*-ref vertex-data n) x)))))
+                   ;;   (GLfloat*-increment 0 1.0)
+                   ;;   (GLfloat*-increment 1 1.0)
+                   ;;   (GLfloat*-increment 4 1.0)
+                   ;;   (GLfloat*-increment 5 1.0)
+                   ;;   (GLfloat*-increment 8 1.0) Comento lo de mover la imagen
+                   ;;   (GLfloat*-increment 9 1.0)
+                   ;;   (GLfloat*-increment 12 1.0)
+                   ;;   (GLfloat*-increment 13 1.0))
                    
                    ;; -- Draw --
                    (glClearColor 1.0 0.2 0.0 0.0)
