@@ -1,6 +1,8 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
 
+(define-structure world gamestates)
+
 (define vertex-shader #<<end-of-shader
 
 #version 120
@@ -79,7 +81,13 @@ end-of-shader
                                          50.0 50.0 0.0 0.0
                                          150.0 50.0 0.0 1.0
                                          150.0 145.0 1.0 1.0
-                                         50.0 145.0 1.0 0.0))
+                                         50.0 145.0 1.0 0.0
+
+
+                                         280.0 50.0 0.0 0.0
+                                         380.0 50.0 0.0 1.0
+                                         380.0 145.0 1.0 1.0
+                                         280.0 145.0 1.0 0.0))
                (vertex-data (f32vector->GLfloat* vertex-data-vector))
                (shaders (list (fusion:create-shader GL_VERTEX_SHADER vertex-shader)
                               (fusion:create-shader GL_FRAGMENT_SHADER fragment-shader)))
@@ -148,7 +156,7 @@ end-of-shader
             (let ((event* (alloc-SDL_Event 1)))
               (call/cc
                (lambda (quit)
-                 (let main-loop ()
+                 (let main-loop ((world (make-world 'none)))
                    (let event-loop ()
                      (when (= 1 (SDL_PollEvent event*))
                            (let ((event-type (SDL_Event-type event*)))
@@ -160,22 +168,48 @@ end-of-shader
                                             (SDL_KeyboardEvent-keysym kevt*))))
                                  (cond ((= key SDLK_ESCAPE)
                                         (quit))
+
+                                       ((= key SDLK_RIGHT)
+                                        (set! world (make-world 'right)))
                                        (else
                                         (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
+                              
+
+                              ((= event-type SDL_KEYUP)
+                               (let* ((kevt* (SDL_Event-key event*))
+                                      (key (SDL_Keysym-sym
+                                            (SDL_KeyboardEvent-keysym kevt*))))
+                                 (cond 
+                                  ((= key SDLK_RIGHT)
+                                   (set! world (make-world 'none)))
+                                  (else
+                                   (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               (else #f)))
                            (event-loop)))
 
                    ;; -- Game logic --
-                   ;; (let ((GLfloat*-increment
-                   ;;        (lambda (n x) (GLfloat*-set! vertex-data n (+ (GLfloat*-ref vertex-data n) x)))))
-                   ;;   (GLfloat*-increment 0 1.0)
-                   ;;   (GLfloat*-increment 1 1.0)
-                   ;;   (GLfloat*-increment 4 1.0)
-                   ;;   (GLfloat*-increment 5 1.0)
-                   ;;   (GLfloat*-increment 8 1.0) Comento lo de mover la imagen
-                   ;;   (GLfloat*-increment 9 1.0)
-                   ;;   (GLfloat*-increment 12 1.0)
-                   ;;   (GLfloat*-increment 13 1.0))
+                   (let ((GLfloat*-increment
+                          (lambda (n x) (GLfloat*-set! vertex-data n (+ (GLfloat*-ref vertex-data n) x)))))
+                     (if (eq? (world-gamestates world) 'right)
+                         (begin
+                           (GLfloat*-increment 0 1.0)
+                                        ;(GLfloat*-increment 1 1.0)
+                           (GLfloat*-increment 4 1.0)
+                                        ;(GLfloat*-increment 5 1.0)
+                           (GLfloat*-increment 8 1.0)
+                                        ;(GLfloat*-increment 9 1.0)
+                           (GLfloat*-increment 12 1.0)))
+                     ;(GLfloat*-increment 13 1.0)
+                     
+
+                     (let move-all-elements ((list (f32vector->list vertex-data-vector)))
+                       #t))
+
+
+                   
+                   ;;Debug
+                   (println (string-append "Estados game: " (object->string (world-gamestates world))))
+
                    
                    ;; -- Draw --
                    (glClearColor 1.0 0.2 0.0 0.0)
@@ -201,7 +235,7 @@ end-of-shader
                    ;; End VAO
                    
                    (SDL_GL_SwapWindow win)
-                   (main-loop))))
+                   (main-loop world))))
               (free event*)
               (SDL_LogInfo SDL_LOG_CATEGORY_APPLICATION "Bye.")
               (SDL_GL_DeleteContext ctx)
