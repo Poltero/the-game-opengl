@@ -2,6 +2,18 @@
 ;;; OpenGL 2.1 2d skeleton
 
 (define-structure world gamestates)
+(define vertex-data-vector '#f32())
+
+
+(define add-element-to-vector!
+  (lambda (x y width height)
+    (set! vertex-data-vector
+          (f32vector-append vertex-data-vector (list->f32vector (list x y 0.0 0.0
+                                                                     (+ x width) y 1.0 0.0
+                                                                     (+ x width) (+ y height) 1.0 1.0
+                                                                     x (+ y height) 0.0 1.0))))))
+
+
 
 (define vertex-shader #<<end-of-shader
 
@@ -77,17 +89,17 @@ end-of-shader
                (texture-id* (alloc-GLuint* 1))
                (texture-unit 0)
                (sampler-id* (alloc-GLuint* 1))
-               (vertex-data-vector '#f32(
-                                         50.0 50.0 0.0 0.0
-                                         150.0 50.0 0.0 1.0
-                                         150.0 145.0 1.0 1.0
-                                         50.0 145.0 1.0 0.0
+               ;; (vertex-data-vector '#f32(
+               ;;                           50.0 50.0 0.0 0.0
+               ;;                           150.0 50.0 0.0 1.0
+               ;;                           150.0 145.0 1.0 1.0
+               ;;                           50.0 145.0 1.0 0.0
 
 
-                                         280.0 50.0 0.0 0.0
-                                         380.0 50.0 0.0 1.0
-                                         380.0 145.0 1.0 1.0
-                                         280.0 145.0 1.0 0.0))
+               ;;                           280.0 50.0 0.0 0.0
+               ;;                           380.0 50.0 0.0 1.0
+               ;;                           380.0 145.0 1.0 1.0
+               ;;                           280.0 145.0 1.0 0.0))
                (vertex-data (f32vector->GLfloat* vertex-data-vector))
                (shaders (list (fusion:create-shader GL_VERTEX_SHADER vertex-shader)
                               (fusion:create-shader GL_FRAGMENT_SHADER fragment-shader)))
@@ -126,6 +138,8 @@ end-of-shader
             (glSamplerParameteri sampler-id GL_TEXTURE_MAG_FILTER GL_NEAREST)
             (glSamplerParameteri sampler-id GL_TEXTURE_MIN_FILTER GL_NEAREST))
           
+
+
           ;; Vertex Array Object
           (glGenBuffers 1 position-buffer-object-id*)
           (let ((position-buffer-object-id (*->GLuint position-buffer-object-id*)))
@@ -186,27 +200,31 @@ end-of-shader
                                    (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               (else #f)))
                            (event-loop)))
-
+                   
+                   (set! vertex-data-vector '#f32())
+                   
                    ;; -- Game logic --
                    (let ((GLfloat*-increment
                           (lambda (n x) (GLfloat*-set! vertex-data n (+ (GLfloat*-ref vertex-data n) x)))))
-                     (if (eq? (world-gamestates world) 'right)
-                         (begin
-                           (GLfloat*-increment 0 1.0)
+                     (when (eq? (world-gamestates world) 'right)
+                          (GLfloat*-increment 0 1.0)
                                         ;(GLfloat*-increment 1 1.0)
-                           (GLfloat*-increment 4 1.0)
+                           
+                         (GLfloat*-increment 4 1.0)
                                         ;(GLfloat*-increment 5 1.0)
-                           (GLfloat*-increment 8 1.0)
+                           
+                         (GLfloat*-increment 8 1.0)
                                         ;(GLfloat*-increment 9 1.0)
-                           (GLfloat*-increment 12 1.0)))
+                           
+                         (GLfloat*-increment 12 1.0))
                      ;(GLfloat*-increment 13 1.0)
                      
 
                      (let move-all-elements ((list (f32vector->list vertex-data-vector)))
                        #t))
 
-
-                   
+                   (add-element-to-vector! 50.0 50.0 100.0 100.0)
+                                      
                    ;;Debug
                    (println (string-append "Estados game: " (object->string (world-gamestates world))))
 
@@ -223,10 +241,15 @@ end-of-shader
                    (glBindVertexArray (*->GLuint main-vao-id*))
                    ;; Update vertex data buffer
                    (glBindBuffer GL_ARRAY_BUFFER position-buffer-object-id)
+                   #;
                    (glBufferSubData GL_ARRAY_BUFFER
                                     0
                                     (* (f32vector-length vertex-data-vector) GLfloat-size)
-                                    vertex-data)
+                                    (f32vector->GLfloat* vertex-data-vector))
+                   (glBufferData GL_ARRAY_BUFFER
+                                 (* (f32vector-length vertex-data-vector) GLfloat-size)
+                                 (f32vector->GLfloat* vertex-data-vector)
+                                 GL_DYNAMIC_DRAW)
                    
                    (glUseProgram shader-program)
                    (glDrawArrays GL_QUADS 0 (/ (f32vector-length vertex-data-vector) 4))
