@@ -1,7 +1,8 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
 
-(define-structure world gamestates)
+(define-structure player posx posy width height vstate hstate score)
+(define-structure world gamestates player)
 (define vertex-data-vector '#f32())
 
 
@@ -170,7 +171,7 @@ end-of-shader
             (let ((event* (alloc-SDL_Event 1)))
               (call/cc
                (lambda (quit)
-                 (let main-loop ((world (make-world 'none)))
+                 (let main-loop ((world (make-world 'none (make-player 400.0 440.0 30.0 30.0 'none 'down 0))))
                    (let event-loop ()
                      (when (= 1 (SDL_PollEvent event*))
                            (let ((event-type (SDL_Event-type event*)))
@@ -184,7 +185,7 @@ end-of-shader
                                         (quit))
 
                                        ((= key SDLK_RIGHT)
-                                        (set! world (make-world 'right)))
+                                        (set! world (make-world 'right (world-player world))))
                                        (else
                                         (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               
@@ -195,7 +196,7 @@ end-of-shader
                                             (SDL_KeyboardEvent-keysym kevt*))))
                                  (cond 
                                   ((= key SDLK_RIGHT)
-                                   (set! world (make-world 'none)))
+                                   (set! world (make-world 'none (world-player world))))
                                   (else
                                    (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               (else #f)))
@@ -204,26 +205,29 @@ end-of-shader
                    (set! vertex-data-vector '#f32())
                    
                    ;; -- Game logic --
-                   (let ((GLfloat*-increment
-                          (lambda (n x) (GLfloat*-set! vertex-data n (+ (GLfloat*-ref vertex-data n) x)))))
-                     (when (eq? (world-gamestates world) 'right)
-                          (GLfloat*-increment 0 1.0)
-                                        ;(GLfloat*-increment 1 1.0)
+                   ;; (let ((GLfloat*-increment
+                   ;;        (lambda (n x) (GLfloat*-set! vertex-data n (+ (GLfloat*-ref vertex-data n) x)))))
+                   ;;   (when (eq? (world-gamestates world) 'right)
+                   ;;        (GLfloat*-increment 0 1.0)
+                   ;;                      ;(GLfloat*-increment 1 1.0)
                            
-                         (GLfloat*-increment 4 1.0)
-                                        ;(GLfloat*-increment 5 1.0)
+                   ;;       (GLfloat*-increment 4 1.0)
+                   ;;                      ;(GLfloat*-increment 5 1.0)
                            
-                         (GLfloat*-increment 8 1.0)
-                                        ;(GLfloat*-increment 9 1.0)
+                   ;;       (GLfloat*-increment 8 1.0)
+                   ;;                      ;(GLfloat*-increment 9 1.0)
                            
-                         (GLfloat*-increment 12 1.0))
+                   ;;       (GLfloat*-increment 12 1.0))
                      ;(GLfloat*-increment 13 1.0)
                      
 
-                     (let move-all-elements ((list (f32vector->list vertex-data-vector)))
-                       #t))
+                     ;; (let move-all-elements ((list (f32vector->list vertex-data-vector)))
+                     ;;   #t))
 
-                   (add-element-to-vector! 50.0 50.0 100.0 100.0)
+                   
+                   
+                   ;;Add player to buffer
+                   (add-element-to-vector! (player-posx (world-player world)) (player-posy (world-player world)) 100.0 100.0)
                                       
                    ;;Debug
                    (println (string-append "Estados game: " (object->string (world-gamestates world))))
