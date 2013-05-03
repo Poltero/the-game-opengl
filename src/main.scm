@@ -1,8 +1,22 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
 
+;Vars of control time
 (define delta-time 0)
 (define last-time 0)
+
+;Level dimension
+(define level-width 10000.0)
+(define level-height 400.0)
+
+;Map level
+(define world-map '#(#(0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                         #(0 0 0 0 0 0 0 0 0 0 0 1 0 0 + 0 0 0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                         #(0 0 0 0 0 0 0 0 +++ 0 0 + 0 0 0 0 0 0 + i i i 0 0 * 0 0 * 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 s 0 0 0 + 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                         #(+ 0 1 0 0 0 0 0 0 0 0 * i i i 0 * * 0 i 0 0 0 0 0 0 +++ 1 1 + 1 i 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * * * * * 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                         #(+++ + 1 1 * 1 1 ++ ++ + 0 0 + 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 ++ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1)
+                         ))
+
 
 (define-structure tile posx posy width height)
 (define-structure camera position state speed)
@@ -18,6 +32,317 @@
                                                                      (+ x width) y 1.0 0.0
                                                                      (+ x width) (+ y height) 1.0 1.0
                                                                      x (+ y height) 0.0 1.0))))))
+
+;Functions logic game
+
+(define check-collision-player-with-coin
+  (lambda (player coin)
+    (let check-collision (
+                          (leftA (player-posx player))
+                          (rightA (+ (player-posx player) (player-width player)))
+                          (topA (player-posy player))
+                          (bottomA (+ (player-posy player) (player-height player)))
+                          (leftB (coin-posx coin))
+                          (rightB (+ (coin-posx coin) (coin-width coin)))
+                          (topB (coin-posy coin))
+                          (bottomB (+ (coin-posy coin) (coin-height coin))))
+      (if (<= bottomA topB)
+          #f
+          (if (>= topA bottomB)
+              #f
+              (if (<= rightA leftB)
+                  #f
+                  (if (>= leftA rightB)
+                      #f
+                      #t)))))))
+
+(define check-collision-player-with-enemy
+  (lambda (player enemy)
+    (let check-collision (
+                          (leftA (player-posx player))
+                          (rightA (+ (player-posx player) (player-width player)))
+                          (topA (player-posy player))
+                          (bottomA (+ (player-posy player) (player-height player)))
+                          (leftB (enemy-posx enemy))
+                          (rightB (+ (enemy-posx enemy) (enemy-width enemy)))
+                          (topB (enemy-posy enemy))
+                          (bottomB (+ (enemy-posy enemy) (enemy-height enemy))))
+      (if (<= bottomA topB)
+          #f
+          (if (>= topA bottomB)
+              #f
+              (if (<= rightA leftB)
+                  #f
+                  (if (>= leftA rightB)
+                      #f
+                      #t)))))))
+
+(define check-collision-player-with-finish
+  (lambda (player finish)
+    (let check-collision (
+                          (leftA (player-posx player))
+                          (rightA (+ (player-posx player) (player-width player)))
+                          (topA (player-posy player))
+                          (bottomA (+ (player-posy player) (player-height player)))
+                          (leftB (finish-posx finish))
+                          (rightB (+ (finish-posx finish) (finish-width finish)))
+                          (topB (finish-posy finish))
+                          (bottomB (+ (finish-posy finish) (finish-height finish))))
+      (if (<= bottomA topB)
+          #f
+          (if (>= topA bottomB)
+              #f
+              (if (<= rightA leftB)
+                  #f
+                  (if (>= leftA rightB)
+                      #f
+                      #t)))))))
+
+
+
+(define update-player-points-for-take-coin
+  (lambda (player coins)
+    (let loop ((rest coins))
+      (unless (null? rest)
+              (if (check-collision-player-with-coin player (car rest))
+                  (begin
+                    (coin-posx-set! (car rest) -20)
+                    (player-score-set! player (+ (player-score player) (coin-points (car rest)))))
+                  (loop (cdr rest)))))))
+
+(define check-player-crash-enemy
+  (lambda (player enemies)
+    (let loop ((rest enemies))
+      (unless (null? rest)
+              (if (check-collision-player-with-enemy player (car rest))
+                  #t
+                  (loop (cdr rest)))))))
+
+
+;;Collision bottom player
+
+(define check-collision-bottom
+  (lambda (player tiles)
+    (let loop ((rest tiles))
+      (unless (null? rest)
+              (let check-collision (
+                                    (leftA (player-posx player))
+                                    (rightA (+ (player-posx player) (player-width player)))
+                                    (bottomA (+ (player-posy player) (player-height player)))
+                                    (leftB (tile-posx (car rest)))
+                                    (topB (tile-posy (car rest)))
+                                    (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
+                                    (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
+                (if (and (> bottomA (- topB 16)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
+                    #t
+                    (loop (cdr rest))))))))
+
+
+;;Collision bottom enemy
+
+(define check-collision-bottom-enemy
+  (lambda (enemy tiles)
+    (let loop ((rest tiles))
+      (unless (null? rest)
+              (let check-collision (
+                                    (leftA (enemy-posx enemy))
+                                    (rightA (+ (enemy-posx enemy) (enemy-width enemy)))
+                                    (bottomA (+ (enemy-posy enemy) (enemy-height enemy)))
+                                    (leftB (tile-posx (car rest)))
+                                    (topB (tile-posy (car rest)))
+                                    (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
+                                    (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
+                (if (and (> bottomA (- topB 12)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
+                    #t
+                    (loop (cdr rest))))))))
+
+
+
+;; (define collision-down-tiles
+;;   (lambda (player tileslist)
+;;     (let loop ((rest tileslist))
+;;       (unless (null? rest)
+;;           (if (and
+;;                (or (> (player-posx player) (tile-posx (car rest))) (> (+ (player-posx player) 40) (tile-posx (car rest))))
+;;                    (< (player-posx player) (+ (tile-posx (car rest)) 40))
+;;                    (> (player-posy player) (- (tile-posy (car rest)) 39))
+;;                    (< (player-posy player) (tile-posy (car rest))))
+;;               #t
+;;               (loop (cdr rest)))))))
+
+(define collision-down-tiles-enemy
+  (lambda (enemy tileslist)
+    (let loop ((rest tileslist))
+      (unless (null? rest)
+          (if (and 
+               (or (> (enemy-posx enemy) (tile-posx (car rest))) (> (+ (enemy-posx enemy) 40) (tile-posx (car rest))))
+                   (< (enemy-posx enemy) (+ (tile-posx (car rest)) 40))
+                   (> (enemy-posy enemy) (- (tile-posy (car rest)) 39))
+                   (< (enemy-posy enemy) (tile-posy (car rest))))
+              #t
+              (loop (cdr rest)))))))
+
+;;Collsion tiles left
+
+(define check-collision-left-tiles
+  (lambda (player tiles)
+    (let loop ((rest tiles))
+      (unless (null? rest)
+              (let ckeck-collision (
+                                    (rightA (+ (player-posx player) (player-width player)))
+                                    (topA (player-posy player))
+                                    (bottomA (+ (player-posy player) (player-height player)))
+                                    (leftB (tile-posx (car rest)))
+                                    (leftA (player-posx player))
+                                    (topB (tile-posy (car rest)))
+                                    (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
+                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (>= rightA (- leftB 13)) (<= leftA leftB))
+                    #t
+                    (loop (cdr rest))))))))
+
+
+;;Collsion tiles right
+
+(define check-collision-right-tiles
+  (lambda (player tiles)
+    (let loop ((rest tiles))
+      (unless (null? rest)
+              (let ckeck-collision (
+                                    (rightA (+ (player-posx player) (player-width player)))
+                                    (topA (player-posy player))
+                                    (bottomA (+ (player-posy player) (player-height player)))
+                                    (leftB (tile-posx (car rest)))
+                                    (rightB (+ (tile-posx (car rest)) (tile-width (car rest))))
+                                    (leftA (player-posx player))
+                                    (topB (tile-posy (car rest)))
+                                    (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
+                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
+                    #t
+                    (loop (cdr rest))))))))
+
+
+
+(define collision-right-tiles
+  (lambda (player tileslist)
+    (let loop ((rest tileslist))
+      (unless (null? rest)
+          (if (and 
+               (or (> (player-posx player) (tile-posx (car rest))) (> (+ (player-posx player) 15) (tile-posx (car rest))))
+               (> (+ (player-posx player) 40) (tile-posx (car rest)))
+               (> (player-posy player) (tile-posy (car rest)))
+               (< (- (player-posy player) 30) (tile-posy (car rest))))
+              #t
+              (loop (cdr rest)))))))
+
+
+(define collision-top-coins
+  (lambda (player coinslist)
+    (let loop ((rest coinslist))
+      (unless (null? rest)
+          (if (and 
+               (or (> (player-posx player) (coin-posx (car rest))) (> (+ (player-posx player) 15) (coin-posx (car rest))))
+                   (< (player-posx player) (+ (coin-posx (car rest)) 15))
+                   (> (player-posy player) (coin-posy (car rest)))
+                   (< (- (player-posy player) 40) (coin-posy (car rest))))
+              (car rest)
+              (loop (cdr rest)))))))
+
+(define collision-down-coins
+  (lambda (player coinslist)
+    (let loop ((rest coinslist))
+      (unless (null? rest)
+          (if (and 
+               (or (> (player-posx player) (coin-posx (car rest))) (> (+ (player-posx player) 15) (coin-posx (car rest))))
+                   (< (player-posx player) (+ (coin-posx (car rest)) 15))
+                   (> (player-posy player) (- (coin-posy (car rest)) 15))
+                   (< (player-posy player) (coin-posy (car rest))))
+              (car rest)
+              (loop (cdr rest)))))))
+
+(define collision-top-tiles
+  (lambda (player tileslist)
+    (let loop ((rest tileslist))
+      (unless (null? rest)
+          (if (and 
+               (or (> (player-posx player) (tile-posx (car rest))) (> (+ (player-posx player) 15) (tile-posx (car rest))))
+               (< (player-posx player)  (+ ( tile-posx (car rest)) 40))
+               (> (player-posy player) (tile-posy (car rest)))
+               (< (- (player-posy player) 40) (tile-posy (car rest))))
+              #t
+              (loop (cdr rest)))))))
+
+
+(define condition-short
+  (lambda (condition values)
+    (if condition
+        (car values)
+        (car (cdr values)))))
+
+(define (create-tiles-map l)
+  (let loop ((rest-map world-map) (rest l) (count-x 0) (count-y 0))
+    (if (< count-y 5)
+        (begin
+          (let create-plataforms ((element (vector-ref (vector-ref rest-map count-y) count-x)))
+            (if (or (eq? element 1) (eq? element '+) (eq? element '*))
+                (let create-plataform-normal ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+                  (if (< number 4)
+                      (begin
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest))
+                        (create-plataform-normal (+ number 1) (+ posx 39))))))
+            (if (or (eq? element 2) (eq? element '+++))
+                (let create-plataform-double ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+                  (if (< number 8)
+                      (begin
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest))
+                        (create-plataform-double (+ number 1) (+ posx 39))))))
+            (if (or (eq? element 'i) (eq? element '++))
+                (let create-unique-plataform ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+                  (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest)))))
+          (if (< count-x 101)
+              (loop rest-map rest (+ count-x 1) count-y)
+              (loop rest-map rest 0 (+ count-y 1))))
+        rest)))
+
+(define (create-coins-map l)
+  (let loop ((rest-map world-map) (rest l) (count-x 0) (count-y 0))
+    (if (< count-y 5)
+        (begin
+          (case (vector-ref (vector-ref rest-map count-y) count-x)
+            ((+)
+             (let create-plataform-with-coins ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+               (if (< number 4)
+                   (begin
+                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-short (< count-y 2) '(98 102)))) 15.0 15.0 10 'yellow) rest))
+                     (create-plataform-with-coins (+ number 1) (+ posx 40))))))
+            ((++)
+             (let create-plataform-with-coins-special ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+               (if (< number 1)
+                   (begin
+                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-short (< count-y 2) '(88 102)) )) 15.0 15.0 50 'green) rest))
+                     (create-plataform-with-coins-special (+ number 1) (+ posx 40))))))
+            ((+++)
+             (let create-plataform-with-coins-doubles ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+               (if (< number 8)
+                   (begin
+                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-short (< count-y 2) '(98 102)))) 15.0 15.0 10 'yellow) rest))
+                     (create-plataform-with-coins-doubles (+ number 1) (+ posx 40)))))))
+          (if (< count-x 101)
+              (loop rest-map rest (+ count-x 1) count-y)
+              (loop rest-map rest 0 (+ count-y 1))))
+        rest)))
+
+(define (create-enemies-map l)
+  (let loop ((rest-map world-map) (rest l) (count-x 0) (count-y 0))
+    (if (< count-y 5)
+        (begin
+          (case (vector-ref (vector-ref rest-map count-y) count-x)
+            ((*)
+             (let create-enemy-normal ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+               (set! rest (cons (make-enemy (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) 99)) 40.0 40.0 10 'blue) rest)))))
+          (if (< count-x 101)
+              (loop rest-map rest (+ count-x 1) count-y)
+              (loop rest-map rest 0 (+ count-y 1))))
+        rest)))
 
 
 (define vertex-shader #<<end-of-shader
@@ -109,7 +434,7 @@ end-of-shader
                (shaders (list (fusion:create-shader GL_VERTEX_SHADER vertex-shader)
                               (fusion:create-shader GL_FRAGMENT_SHADER fragment-shader)))
                (shader-program (fusion:create-program shaders))
-               (texture-image* (SDL_LoadBMP "assets/128x128sg.bmp")))
+               (texture-image* (SDL_LoadBMP "assets/128x128.bmp")))
           ;; Clean up shaders once the program has been compiled and linked
           (for-each glDeleteShader shaders)
 
@@ -196,7 +521,22 @@ end-of-shader
                                         (quit))
 
                                        ((= key SDLK_RIGHT)
-                                        (set! world (make-world 'right (world-tiles world) (world-camera world) (world-player world))))
+                                        (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                                (make-player
+                                                                 (player-posx (world-player world))
+                                                                 (player-posy (world-player world))
+                                                                 (player-width (world-player world))
+                                                                 (player-height (world-player world))
+                                                                 'right
+                                                                 (player-hstate (world-player world))
+                                                                 (player-score (world-player world))))))
+                                       
+                                       ((= key SDLK_RETURN)
+                                        (set! world (make-world 
+                                                     'gamescreen
+                                                     (create-tiles-map (world-tiles world))
+                                                     (make-camera 0.0 'on 0.1)
+                                                     (make-player 400.0 460.0 30.0 30.0 'none 'down 0))))
                                        (else
                                         (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               
@@ -207,7 +547,15 @@ end-of-shader
                                             (SDL_KeyboardEvent-keysym kevt*))))
                                  (cond 
                                   ((= key SDLK_RIGHT)
-                                   (set! world (make-world 'none (world-player world))))
+                                   (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                           (make-player
+                                                            (player-posx (world-player world))
+                                                            (player-posy (world-player world))
+                                                            (player-width (world-player world))
+                                                            (player-height (world-player world))
+                                                            'none
+                                                            (player-hstate (world-player world))
+                                                            (player-score (world-player world))))))
                                   (else
                                    (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               (else #f)))
@@ -234,18 +582,52 @@ end-of-shader
 
                      ;; (let move-all-elements ((list (f32vector->list vertex-data-vector)))
                      ;;   #t))
+                   
+
+                   ;;Logic Events
+
+                   (if (and (eq? (player-vstate (world-player world)) 'left) (not (check-collision-right-tiles (world-player world) (world-tiles world))))
+                       (let player-left ((camera (world-camera world)) (tiles (world-tiles world)) (player (world-player world)))
+                         (begin
+                           (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
+                           (if (eq? (camera-state camera) 'on)
+                               (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time)))))))
+                   
+                   (if (and (eq? (player-vstate (world-player world)) 'right) (not (check-collision-left-tiles (world-player world) (world-tiles world))))
+                       (let player-right ((camera (world-camera world)) (tiles (world-tiles world)) (player (world-player world)))
+                         (begin
+                           (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
+                           (if (eq? (camera-state camera) 'on)
+                               (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))))
 
                    
                    
+                   ;;Add all tiles of the world to buffer
+                   (let add-all-tiles-of-world ((rest (world-tiles world)))
+                     (when (not (null? rest))
+                         (add-element-to-vector! 
+                          (exact->inexact (- (tile-posx (car rest)) (camera-position (world-camera world))))
+                          (exact->inexact (tile-posy (car rest)))
+                          (tile-width (car rest))
+                          (tile-height (car rest)))
+                         (add-all-tiles-of-world (cdr rest))))
                    
                    
                    ;;Add player to buffer
-                   (add-element-to-vector! (player-posx (world-player world)) (player-posy (world-player world)) 100.0 100.0)
+                   (if (eq? (world-gamestates world) 'gamescreen)
+                       (let add-player-to-buffer ((player (world-player world)))
+                         (add-element-to-vector! (- (player-posx player) (camera-position (world-camera world)))
+                                                 (player-posy player) 
+                                                 (player-width player) 
+                                                 (player-height player))))
                                       
                    ;;Debug
                    ;(println (string-append "Estados game: " (object->string (world-gamestates world))))
 
-                   (println (string-append "Time: " (number->string time)))
+                   ;(println (string-append "Time: " (number->string time)))
+                   
+                   (if (eq? (world-gamestates world) 'gamescreen)
+                       (println (object->string (camera-position (world-camera world)))))
 
                    
                    ;; -- Draw --
