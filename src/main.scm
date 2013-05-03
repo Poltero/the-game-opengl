@@ -9,6 +9,9 @@
 (define level-width 10000.0)
 (define level-height 400.0)
 
+;Global position origin y
+(define position-y-origin 0)
+
 ;Map level
 (define world-map '#(#(0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(0 0 0 0 0 0 0 0 0 0 0 1 0 0 + 0 0 0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
@@ -541,6 +544,18 @@ end-of-shader
                                                                  'left
                                                                  (player-hstate (world-player world))
                                                                  (player-score (world-player world))))))
+
+
+                                       ((= key SDLK_UP)
+                                        (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                                (make-player
+                                                                 (player-posx (world-player world))
+                                                                 (player-posy (world-player world))
+                                                                 (player-width (world-player world))
+                                                                 (player-height (world-player world))
+                                                                 (player-vstate (world-player world))
+                                                                 'up
+                                                                 (player-score (world-player world))))))
                                        
                                        ((= key SDLK_RETURN)
                                         (set! world (make-world 
@@ -578,6 +593,18 @@ end-of-shader
                                                             'none
                                                             (player-hstate (world-player world))
                                                             (player-score (world-player world))))))
+
+                                  ((= key SDLK_UP)
+                                        (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                                (make-player
+                                                                 (player-posx (world-player world))
+                                                                 (player-posy (world-player world))
+                                                                 (player-width (world-player world))
+                                                                 (player-height (world-player world))
+                                                                 (player-vstate (world-player world))
+                                                                 (player-hstate (world-player world))
+                                                                 (player-score (world-player world))))))
+                                  
                                   (else
                                    (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               (else #f)))
@@ -606,6 +633,30 @@ end-of-shader
                               (if (eq? (camera-state camera) 'on)
                                   (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))))
 
+                      (if (eq? (player-hstate (world-player world)) 'up) 
+                          (if (check-collision-bottom (world-player world) (world-tiles world))
+                              (player-hstate-set! (world-player world) 'jump)
+                              (player-hstate-set! (world-player world) 'down)))
+
+
+                      (if (eq? (player-hstate (world-player world)) 'jump) 
+                          (if (not (collision-top-tiles (world-player world) (world-tiles world)))
+                              (begin 
+                                (if (= position-y-origin (player-posy (world-player world)))
+                                    (set! position-y-origin (- (player-posy (world-player world)) -50)))
+                                (let player-up ((player (world-player world)))
+                                  (player-posy-set! player (- (player-posy player) (* 0.3 delta-time)))))
+                              (player-hstate-set! (world-player world) 'down)))
+
+
+                      (if (and (eq? (player-hstate (world-player world)) 'down) (not (check-collision-bottom (world-player world) (world-tiles world))))
+                          (let player-down ((player (world-player world)))
+                            (player-posy-set! player (+ (player-posy player) (* 0.3 delta-time)))))
+
+                      
+                      ;Control limits jump
+                      (if (> position-y-origin (player-posy (world-player world)))
+                          (player-hstate-set! (world-player world) 'down))
                       
                       
                       ;;Set camera
@@ -651,7 +702,7 @@ end-of-shader
                       
                       
                       ;; -- Draw --
-                      (glClearColor 1.0 0.2 0.0 0.0)
+                      (glClearColor 0.0 0.0 0.0 0.0)
                       (glClear GL_COLOR_BUFFER_BIT)
                       
                       (glActiveTexture (+ GL_TEXTURE0 texture-unit))
