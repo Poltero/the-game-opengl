@@ -531,6 +531,17 @@ end-of-shader
                                                                  (player-hstate (world-player world))
                                                                  (player-score (world-player world))))))
                                        
+                                       ((= key SDLK_LEFT)
+                                        (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                                (make-player
+                                                                 (player-posx (world-player world))
+                                                                 (player-posy (world-player world))
+                                                                 (player-width (world-player world))
+                                                                 (player-height (world-player world))
+                                                                 'left
+                                                                 (player-hstate (world-player world))
+                                                                 (player-score (world-player world))))))
+                                       
                                        ((= key SDLK_RETURN)
                                         (set! world (make-world 
                                                      'gamescreen
@@ -547,6 +558,17 @@ end-of-shader
                                             (SDL_KeyboardEvent-keysym kevt*))))
                                  (cond 
                                   ((= key SDLK_RIGHT)
+                                   (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                           (make-player
+                                                            (player-posx (world-player world))
+                                                            (player-posy (world-player world))
+                                                            (player-width (world-player world))
+                                                            (player-height (world-player world))
+                                                            'none
+                                                            (player-hstate (world-player world))
+                                                            (player-score (world-player world))))))
+
+                                  ((= key SDLK_LEFT)
                                    (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
                                                            (make-player
                                                             (player-posx (world-player world))
