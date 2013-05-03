@@ -585,104 +585,102 @@ end-of-shader
                    
                    (set! vertex-data-vector '#f32())
                    
-                   ;; -- Game logic --
-                   ;; (let ((GLfloat*-increment
-                   ;;        (lambda (n x) (GLfloat*-set! vertex-data n (+ (GLfloat*-ref vertex-data n) x)))))
-                   ;;   (when (eq? (world-gamestates world) 'right)
-                   ;;        (GLfloat*-increment 0 1.0)
-                   ;;                      ;(GLfloat*-increment 1 1.0)
-                           
-                   ;;       (GLfloat*-increment 4 1.0)
-                   ;;                      ;(GLfloat*-increment 5 1.0)
-                           
-                   ;;       (GLfloat*-increment 8 1.0)
-                   ;;                      ;(GLfloat*-increment 9 1.0)
-                           
-                   ;;       (GLfloat*-increment 12 1.0))
-                     ;(GLfloat*-increment 13 1.0)
-                     
+                   (case (world-gamestates world)
+                     ((gamescreen)
+                      
+                      
 
-                     ;; (let move-all-elements ((list (f32vector->list vertex-data-vector)))
-                     ;;   #t))
-                   
+                      ;;Logic Events
 
-                   ;;Logic Events
+                      (if (and (eq? (player-vstate (world-player world)) 'left) (not (check-collision-right-tiles (world-player world) (world-tiles world))))
+                          (let player-left ((camera (world-camera world)) (tiles (world-tiles world)) (player (world-player world)))
+                            (begin
+                              (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
+                              (if (eq? (camera-state camera) 'on)
+                                  (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time)))))))
+                      
+                      (if (and (eq? (player-vstate (world-player world)) 'right) (not (check-collision-left-tiles (world-player world) (world-tiles world))))
+                          (let player-right ((camera (world-camera world)) (tiles (world-tiles world)) (player (world-player world)))
+                            (begin
+                              (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
+                              (if (eq? (camera-state camera) 'on)
+                                  (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))))
 
-                   (if (and (eq? (player-vstate (world-player world)) 'left) (not (check-collision-right-tiles (world-player world) (world-tiles world))))
-                       (let player-left ((camera (world-camera world)) (tiles (world-tiles world)) (player (world-player world)))
-                         (begin
-                           (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
-                           (if (eq? (camera-state camera) 'on)
-                               (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time)))))))
-                   
-                   (if (and (eq? (player-vstate (world-player world)) 'right) (not (check-collision-left-tiles (world-player world) (world-tiles world))))
-                       (let player-right ((camera (world-camera world)) (tiles (world-tiles world)) (player (world-player world)))
-                         (begin
-                           (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
-                           (if (eq? (camera-state camera) 'on)
-                               (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))))
+                      
+                      
+                      ;;Set camera
+                      (if (eq? (camera-state (world-camera world)) 'auto)
+                          (camera-position-set! (world-camera world) (+ (camera-position (world-camera world)) (* (camera-speed (world-camera world)) delta-time))))
 
-                   
-                   
-                   ;;Add all tiles of the world to buffer
-                   (let add-all-tiles-of-world ((rest (world-tiles world)))
-                     (when (not (null? rest))
-                         (add-element-to-vector! 
-                          (exact->inexact (- (tile-posx (car rest)) (camera-position (world-camera world))))
-                          (exact->inexact (tile-posy (car rest)))
-                          (tile-width (car rest))
-                          (tile-height (car rest)))
-                         (add-all-tiles-of-world (cdr rest))))
-                   
-                   
-                   ;;Add player to buffer
-                   (if (eq? (world-gamestates world) 'gamescreen)
-                       (let add-player-to-buffer ((player (world-player world)))
-                         (add-element-to-vector! (- (player-posx player) (camera-position (world-camera world)))
-                                                 (player-posy player) 
-                                                 (player-width player) 
-                                                 (player-height player))))
-                                      
-                   ;;Debug
-                   ;(println (string-append "Estados game: " (object->string (world-gamestates world))))
+                      
 
-                   ;(println (string-append "Time: " (number->string time)))
-                   
-                   (if (eq? (world-gamestates world) 'gamescreen)
-                       (println (object->string (camera-position (world-camera world)))))
+                      ;;keep the camera in bounds
+                      (if (< (camera-position (world-camera world)) 0)
+                          (camera-position-set! (world-camera world) 0))
+                      (if (> (camera-position (world-camera world)) (- level-width (camera-position (world-camera world))))
+                          (world-gamestates-set! world 'win))
 
-                   
-                   ;; -- Draw --
-                   (glClearColor 1.0 0.2 0.0 0.0)
-                   (glClear GL_COLOR_BUFFER_BIT)
-                   
-                   (glActiveTexture (+ GL_TEXTURE0 texture-unit))
-                   (glBindTexture GL_TEXTURE_2D (*->GLuint texture-id*))
-                   (glBindSampler texture-unit (*->GLuint sampler-id*))
-
-                   ;; Begin VAO
-                   (glBindVertexArray (*->GLuint main-vao-id*))
-                   ;; Update vertex data buffer
-                   (glBindBuffer GL_ARRAY_BUFFER position-buffer-object-id)
-                   #;
-                   (glBufferSubData GL_ARRAY_BUFFER
-                                    0
+                      
+                      
+                      ;;Add all tiles of the world to buffer
+                      (let add-all-tiles-of-world ((rest (world-tiles world)))
+                        (when (not (null? rest))
+                              (add-element-to-vector! 
+                               (exact->inexact (- (tile-posx (car rest)) (camera-position (world-camera world))))
+                               (exact->inexact (tile-posy (car rest)))
+                               (tile-width (car rest))
+                               (tile-height (car rest)))
+                              (add-all-tiles-of-world (cdr rest))))
+                      
+                      
+                      ;;Add player to buffer
+                      (if (eq? (world-gamestates world) 'gamescreen)
+                          (let add-player-to-buffer ((player (world-player world)))
+                            (add-element-to-vector! (- (player-posx player) (camera-position (world-camera world)))
+                                                    (player-posy player) 
+                                                    (player-width player) 
+                                                    (player-height player))))
+                      
+                      ;;Debug
+                                        ;(println (string-append "Estados game: " (object->string (world-gamestates world))))
+                      
+                                        ;(println (string-append "Time: " (number->string time)))
+                      
+                      (if (eq? (world-gamestates world) 'gamescreen)
+                          (println (object->string (camera-position (world-camera world)))))
+                      
+                      
+                      ;; -- Draw --
+                      (glClearColor 1.0 0.2 0.0 0.0)
+                      (glClear GL_COLOR_BUFFER_BIT)
+                      
+                      (glActiveTexture (+ GL_TEXTURE0 texture-unit))
+                      (glBindTexture GL_TEXTURE_2D (*->GLuint texture-id*))
+                      (glBindSampler texture-unit (*->GLuint sampler-id*))
+                      
+                      ;; Begin VAO
+                      (glBindVertexArray (*->GLuint main-vao-id*))
+                      ;; Update vertex data buffer
+                      (glBindBuffer GL_ARRAY_BUFFER position-buffer-object-id)
+                      #;
+                      (glBufferSubData GL_ARRAY_BUFFER
+                      0
+                      (* (f32vector-length vertex-data-vector) GLfloat-size)
+                      (f32vector->GLfloat* vertex-data-vector))
+                      (glBufferData GL_ARRAY_BUFFER
                                     (* (f32vector-length vertex-data-vector) GLfloat-size)
-                                    (f32vector->GLfloat* vertex-data-vector))
-                   (glBufferData GL_ARRAY_BUFFER
-                                 (* (f32vector-length vertex-data-vector) GLfloat-size)
-                                 (f32vector->GLfloat* vertex-data-vector)
-                                 GL_DYNAMIC_DRAW)
-                   
-                   (glUseProgram shader-program)
-                   (glDrawArrays GL_QUADS 0 (/ (f32vector-length vertex-data-vector) 4))
-                   (glUseProgram 0)
-                   (glBindVertexArray 0)
-                   ;; End VAO
-                   
-                   (SDL_GL_SwapWindow win)
-                   (main-loop world (SDL_GetTicks)))))
-              (free event*)
+                                    (f32vector->GLfloat* vertex-data-vector)
+                                    GL_DYNAMIC_DRAW)
+                      
+                      (glUseProgram shader-program)
+                      (glDrawArrays GL_QUADS 0 (/ (f32vector-length vertex-data-vector) 4))
+                      (glUseProgram 0)
+                      (glBindVertexArray 0)
+                      ;; End VAO
+                      
+                      (SDL_GL_SwapWindow win)))
+          (main-loop world (SDL_GetTicks)))
+                 (free event*)))
               (SDL_LogInfo SDL_LOG_CATEGORY_APPLICATION "Bye.")
               (SDL_GL_DeleteContext ctx)
               (SDL_DestroyWindow win)
