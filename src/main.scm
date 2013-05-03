@@ -24,7 +24,8 @@
 (define-structure tile posx posy width height)
 (define-structure camera position state speed)
 (define-structure player posx posy width height vstate hstate score)
-(define-structure world gamestates tiles camera player)
+(define-structure coin posx posy width height points color)
+(define-structure world gamestates tiles camera player coins)
 (define vertex-data-vector '#f32())
 
 
@@ -508,7 +509,7 @@ end-of-shader
             (let ((event* (alloc-SDL_Event 1)))
               (call/cc
                (lambda (quit)
-                 (let main-loop ((world (make-world 'splashscreen '() 'none (make-player 0.0 0.0 0.0 0.0 'none 'none 0))) (time (SDL_GetTicks)))
+                 (let main-loop ((world (make-world 'splashscreen '() 'none (make-player 0.0 0.0 0.0 0.0 'none 'none 0) '())) (time (SDL_GetTicks)))
                    (set! delta-time (- time last-time))
                    (set! last-time time)
                    (let event-loop ()
@@ -532,7 +533,8 @@ end-of-shader
                                                                  (player-height (world-player world))
                                                                  'right
                                                                  (player-hstate (world-player world))
-                                                                 (player-score (world-player world))))))
+                                                                 (player-score (world-player world)))
+                                                                (world-coins world))))
                                        
                                        ((= key SDLK_LEFT)
                                         (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
@@ -543,7 +545,8 @@ end-of-shader
                                                                  (player-height (world-player world))
                                                                  'left
                                                                  (player-hstate (world-player world))
-                                                                 (player-score (world-player world))))))
+                                                                 (player-score (world-player world)))
+                                                                (world-coins world))))
 
 
                                        ((= key SDLK_UP)
@@ -555,14 +558,16 @@ end-of-shader
                                                                  (player-height (world-player world))
                                                                  (player-vstate (world-player world))
                                                                  'up
-                                                                 (player-score (world-player world))))))
+                                                                 (player-score (world-player world)))
+                                                                (world-coins world))))
                                        
                                        ((= key SDLK_RETURN)
                                         (set! world (make-world 
                                                      'gamescreen
                                                      (create-tiles-map (world-tiles world))
                                                      (make-camera 0.0 'on 0.1)
-                                                     (make-player 400.0 460.0 30.0 30.0 'none 'down 0))))
+                                                     (make-player 400.0 460.0 30.0 30.0 'none 'down 0)
+                                                     (create-coins-map (world-coins world)))))
                                        (else
                                         (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               
@@ -581,7 +586,8 @@ end-of-shader
                                                             (player-height (world-player world))
                                                             'none
                                                             (player-hstate (world-player world))
-                                                            (player-score (world-player world))))))
+                                                            (player-score (world-player world)))
+                                                           (world-coins world))))
 
                                   ((= key SDLK_LEFT)
                                    (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
@@ -592,7 +598,8 @@ end-of-shader
                                                             (player-height (world-player world))
                                                             'none
                                                             (player-hstate (world-player world))
-                                                            (player-score (world-player world))))))
+                                                            (player-score (world-player world)))
+                                                           (world-coins world))))
 
                                   ((= key SDLK_UP)
                                         (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
@@ -603,7 +610,8 @@ end-of-shader
                                                                  (player-height (world-player world))
                                                                  (player-vstate (world-player world))
                                                                  (player-hstate (world-player world))
-                                                                 (player-score (world-player world))))))
+                                                                 (player-score (world-player world)))
+                                                                (world-coins world))))
                                   
                                   (else
                                    (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
@@ -671,6 +679,9 @@ end-of-shader
                       (if (> (camera-position (world-camera world)) (- level-width (camera-position (world-camera world))))
                           (world-gamestates-set! world 'win))
 
+
+                      ;Calculate collision with coins
+                      (update-player-points-for-take-coin (world-player world) (world-coins world))
                       
                       
                       ;;Add all tiles of the world to buffer
@@ -682,6 +693,17 @@ end-of-shader
                                (tile-width (car rest))
                                (tile-height (car rest)))
                               (add-all-tiles-of-world (cdr rest))))
+
+                      
+                      ;;Add all coins of the world to buffer
+                      (let add-all-coins-of-world ((rest (world-coins world)))
+                        (when (not (null? rest))
+                              (add-element-to-vector!
+                               (exact->inexact (- (coin-posx (car rest)) (camera-position (world-camera world))))
+                               (exact->inexact (coin-posy (car rest)))
+                               (coin-width (car rest))
+                               (coin-height (car rest)))
+                              (add-all-coins-of-world (cdr rest))))
                       
                       
                       ;;Add player to buffer
