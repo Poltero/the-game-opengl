@@ -157,7 +157,7 @@
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
                                     (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
-                (if (and (> bottomA (- topB 12)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
+                (if (and (> bottomA (- topB 3)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
                     #t
                     (loop (cdr rest))))))))
 
@@ -694,7 +694,6 @@ end-of-shader
                       (world-coins-set! world '()))
                      
                      ((gamescreen)
-                      
                       
 
                       ;;Logic Events
