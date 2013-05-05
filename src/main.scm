@@ -15,7 +15,7 @@
 ;Map level
 (define world-map '#(#(0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(0 0 0 0 0 0 0 0 0 0 0 1 0 0 + 0 0 0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(0 0 0 0 0 0 0 0 +++ 0 0 + 0 0 0 0 0 0 + i i i 0 0 * 0 0 * 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 s 0 0 0 + 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                         #(0 0 0 0 0 0 0 0 +++ 0 0 + 0 0 0 0 0 0 + i i i 0 0 * 0 0 * 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 0 *+ 0 0 0 *+ 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(+ 0 1 0 0 0 0 0 0 0 0 * i i i 0 * * 0 i 0 0 0 0 0 0 +++ 1 1 + 1 i 0 0 0 0 0 0 0 0 0 0 0 0 |--| 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * * * * * 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(+++ + 1 1 * 1 1 ++ ++ + 0 0 + 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 ++ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1)
                          ))
@@ -23,9 +23,10 @@
 
 (define-structure tile posx posy width height)
 (define-structure camera position state speed)
+(define-structure enemy posx posy width height points type direction)
 (define-structure player posx posy width height vstate hstate score)
 (define-structure coin posx posy width height points color)
-(define-structure world gamestates tiles camera player coins)
+(define-structure world gamestates tiles camera player coins enemies)
 (define vertex-data-vector '#f32())
 
 
@@ -186,7 +187,7 @@
               #t
               (loop (cdr rest)))))))
 
-;;Collsion tiles left
+;;Collsion tiles left of player
 
 (define check-collision-left-tiles
   (lambda (player tiles)
@@ -205,7 +206,25 @@
                     (loop (cdr rest))))))))
 
 
-;;Collsion tiles right
+;;Collision tiles left of enemy
+(define check-collision-left-tiles-enemy
+  (lambda (enemy tiles)
+    (let loop ((rest tiles))
+      (unless (null? rest)
+              (let ckeck-collision (
+                                    (rightA (+ (enemy-posx enemy) (enemy-width enemy)))
+                                    (topA (enemy-posy enemy))
+                                    (bottomA (+ (enemy-posy enemy) (enemy-height enemy)))
+                                    (leftB (tile-posx (car rest)))
+                                    (leftA (enemy-posx enemy))
+                                    (topB (tile-posy (car rest)))
+                                    (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
+                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (>= rightA (- leftB 13)) (<= leftA leftB))
+                    #t
+                    (loop (cdr rest))))))))
+
+
+;;Collsion tiles right of player
 
 (define check-collision-right-tiles
   (lambda (player tiles)
@@ -218,6 +237,24 @@
                                     (leftB (tile-posx (car rest)))
                                     (rightB (+ (tile-posx (car rest)) (tile-width (car rest))))
                                     (leftA (player-posx player))
+                                    (topB (tile-posy (car rest)))
+                                    (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
+                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
+                    #t
+                    (loop (cdr rest))))))))
+
+;;Collision tiles right of enemy
+(define check-collision-right-tiles-enemy
+  (lambda (enemy tiles)
+    (let loop ((rest tiles))
+      (unless (null? rest)
+              (let ckeck-collision (
+                                    (rightA (+ (enemy-posx enemy) (enemy-width enemy)))
+                                    (topA (enemy-posy enemy))
+                                    (bottomA (+ (enemy-posy enemy) (enemy-height enemy)))
+                                    (leftB (tile-posx (car rest)))
+                                    (rightB (+ (tile-posx (car rest)) (tile-width (car rest))))
+                                    (leftA (enemy-posx enemy))
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
                 (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
@@ -360,8 +397,11 @@
         (begin
           (case (vector-ref (vector-ref rest-map count-y) count-x)
             ((*)
-             (let create-enemy-normal ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
-               (set! rest (cons (make-enemy (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) 99)) 40.0 40.0 10 'blue) rest)))))
+             (let create-enemy-kamikaze ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+               (set! rest (cons (make-enemy (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) 99)) 40.0 40.0 10 'kamikaze 'none) rest))))
+            ((*+)
+             (let create-enemy-defender ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+               (set! rest (cons (make-enemy (exact->inexact (+ posx 60)) (exact->inexact (* (+ 0.7 count-y) 99)) 40.0 40.0 10 'defender 'left) rest)))))
           (if (< count-x 101)
               (loop rest-map rest (+ count-x 1) count-y)
               (loop rest-map rest 0 (+ count-y 1))))
@@ -528,7 +568,7 @@ end-of-shader
             (let ((event* (alloc-SDL_Event 1)))
               (call/cc
                (lambda (quit)
-                 (let main-loop ((world (make-world 'splashscreen '() 'none (make-player 0.0 0.0 0.0 0.0 'none 'none 0) '())) (time (SDL_GetTicks)))
+                 (let main-loop ((world (make-world 'splashscreen '() 'none (make-player 0.0 0.0 0.0 0.0 'none 'none 0) '() '())) (time (SDL_GetTicks)))
                    (set! delta-time (- time last-time))
                    (set! last-time time)
                    (let event-loop ()
@@ -553,7 +593,8 @@ end-of-shader
                                                                  'right
                                                                  (player-hstate (world-player world))
                                                                  (player-score (world-player world)))
-                                                                (world-coins world))))
+                                                                (world-coins world)
+                                                                (world-enemies world))))
                                        
                                        ((= key SDLK_LEFT)
                                         (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
@@ -565,7 +606,8 @@ end-of-shader
                                                                  'left
                                                                  (player-hstate (world-player world))
                                                                  (player-score (world-player world)))
-                                                                (world-coins world))))
+                                                                (world-coins world)
+                                                                (world-enemies world))))
 
 
                                        ((= key SDLK_UP)
@@ -578,7 +620,8 @@ end-of-shader
                                                                  (player-vstate (world-player world))
                                                                  'up
                                                                  (player-score (world-player world)))
-                                                                (world-coins world))))
+                                                                (world-coins world)
+                                                                (world-enemies world))))
                                        
                                        ((= key SDLK_RETURN)
                                         (set! world (make-world 
@@ -586,7 +629,8 @@ end-of-shader
                                                      (create-tiles-map (world-tiles world))
                                                      (make-camera 0.0 'on 0.1)
                                                      (make-player 400.0 460.0 30.0 30.0 'none 'down 0)
-                                                     (create-coins-map (world-coins world)))))
+                                                     (create-coins-map (world-coins world))
+                                                     (create-enemies-map (world-enemies world)))))
                                        (else
                                         (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               
@@ -606,7 +650,8 @@ end-of-shader
                                                             'none
                                                             (player-hstate (world-player world))
                                                             (player-score (world-player world)))
-                                                           (world-coins world))))
+                                                           (world-coins world)
+                                                           (world-enemies world))))
 
                                   ((= key SDLK_LEFT)
                                    (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
@@ -618,7 +663,8 @@ end-of-shader
                                                             'none
                                                             (player-hstate (world-player world))
                                                             (player-score (world-player world)))
-                                                           (world-coins world))))
+                                                           (world-coins world)
+                                                           (world-enemies world))))
 
                                   ((= key SDLK_UP)
                                         (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
@@ -630,7 +676,8 @@ end-of-shader
                                                                  (player-vstate (world-player world))
                                                                  (player-hstate (world-player world))
                                                                  (player-score (world-player world)))
-                                                                (world-coins world))))
+                                                                (world-coins world)
+                                                                (world-enemies world))))
                                   
                                   (else
                                    (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
@@ -723,6 +770,34 @@ end-of-shader
                                (coin-width (car rest))
                                (coin-height (car rest)))
                               (add-all-coins-of-world (cdr rest))))
+                      
+
+                      ;;Add all enemies of the world to buffer
+                      (let add-all-enemies-of-world ((rest (world-enemies world)))
+                        (when (not (null? rest))
+                              (case (enemy-type (car rest))
+                                ((kamikaze)
+                                 (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                                     (begin (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
+                                            (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                                     (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
+                                ((defender)
+                                 (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                                     (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                                 (if (check-collision-right-tiles-enemy (car rest) (world-tiles world))
+                                     (enemy-direction-set! (car rest) 'right)
+                                     (if (check-collision-left-tiles-enemy (car rest) (world-tiles world))
+                                         (enemy-direction-set! (car rest) 'left)))
+                                 (if (eq? (enemy-direction (car rest)) 'right)
+                                     (enemy-posx-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time)))
+                                     (if (eq? (enemy-direction (car rest)) 'left)
+                                         (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))))
+                              (add-element-to-vector!
+                               (exact->inexact (- (enemy-posx (car rest)) (camera-position (world-camera world))))
+                               (exact->inexact (enemy-posy (car rest)))
+                               (enemy-width (car rest))
+                               (enemy-height (car rest)))
+                              (add-all-enemies-of-world (cdr rest))))
                       
                       
                       ;;Add player to buffer
