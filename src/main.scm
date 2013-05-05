@@ -336,6 +336,13 @@
                    (begin
                      (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-short (< count-y 2) '(88 102)) )) 15.0 15.0 50 'green) rest))
                      (create-plataform-with-coins-special (+ number 1) (+ posx 40))))))
+            ((|--|)
+             (let create-plataform-with-coins-doubles ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+               (if (< number 8)
+                   (begin
+                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-short (< count-y 2) '(98 102)))) 15.0 15.0 10 'yellow) rest))
+                     (create-plataform-with-coins-doubles (+ number 1) (+ posx 40))))))
+
             ((+++)
              (let create-plataform-with-coins-doubles ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                (if (< number 8)
