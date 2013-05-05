@@ -807,19 +807,27 @@ end-of-shader
                                                     (player-posy player) 
                                                     (player-width player) 
                                                     (player-height player))))
+                     
                       
-                      ;;Debug
-                                        ;(println (string-append "Estados game: " (object->string (world-gamestates world))))
-                      
-                                        ;(println (string-append "Time: " (number->string time)))
+
                       ;;You lost
                       (when (check-player-crash-enemy (world-player world) (world-enemies world))
                             (world-gamestates-set! world 'lose)
                             (set! vertex-data-vector '#f32()))
 
+                      (when (< (- (player-posx (world-player world)) (camera-position (world-camera world))) (* -1 (player-width (world-player world))))
+                          (world-gamestates-set! world 'lose)
+                          (set! vertex-data-vector '#f32()))
 
-                      (if (eq? (world-gamestates world) 'gamescreen)
-                          (println (object->string (camera-position (world-camera world)))))
+                      (when (> (player-posy (world-player world)) 750)
+                          (world-gamestates-set! world 'lose)
+                          (set! vertex-data-vector '#f32()))
+
+                      ;;End you lost
+
+
+                      ;; (if (eq? (world-gamestates world) 'gamescreen)
+                      ;;     (println (object->string (camera-position (world-camera world)))))
                       
                       
                       ;; -- Draw --
