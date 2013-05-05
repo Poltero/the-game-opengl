@@ -628,7 +628,7 @@ end-of-shader
                                                      'gamescreen
                                                      (create-tiles-map (world-tiles world))
                                                      (make-camera 0.0 'on 0.1)
-                                                     (make-player 400.0 460.0 30.0 30.0 'none 'down 0)
+                                                     (make-player 400.0 450.0 30.0 30.0 'none 'down 0)
                                                      (create-coins-map (world-coins world))
                                                      (create-enemies-map (world-enemies world)))))
                                        (else
@@ -687,6 +687,12 @@ end-of-shader
                    (set! vertex-data-vector '#f32())
                    
                    (case (world-gamestates world)
+                     ((lose)
+                      ;;Reset list of the world
+                      (world-tiles-set! world '())
+                      (world-enemies-set! world '())
+                      (world-coins-set! world '()))
+                     
                      ((gamescreen)
                       
                       
