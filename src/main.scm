@@ -812,7 +812,12 @@ end-of-shader
                                         ;(println (string-append "Estados game: " (object->string (world-gamestates world))))
                       
                                         ;(println (string-append "Time: " (number->string time)))
-                      
+                      ;;You lost
+                      (when (check-player-crash-enemy (world-player world) (world-enemies world))
+                            (world-gamestates-set! world 'lose)
+                            (set! vertex-data-vector '#f32()))
+
+
                       (if (eq? (world-gamestates world) 'gamescreen)
                           (println (object->string (camera-position (world-camera world)))))
                       
