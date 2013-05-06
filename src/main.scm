@@ -812,7 +812,6 @@ end-of-shader
                       ;;Kill enemies
                       (let loop ((rest (world-enemies world)))
                         (unless (null? rest)
-                                (println (object->string (car rest)))
                                 (if (not (eq? (enemy-type (car rest)) 'defender))
                                     (if (check-collision-bottom-player-with-enemy (world-player world) (car rest))
                                         (begin
