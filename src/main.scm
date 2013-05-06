@@ -40,17 +40,19 @@
 
 ;Functions logic game
 
-(define check-collision-player-with-coin
-  (lambda (player coin)
+;;Check collsion player with something 
+
+(define check-collision-player-with-generic 
+  (lambda (player element element-posx element-posy element-width element-height)
     (let check-collision (
                           (leftA (player-posx player))
                           (rightA (+ (player-posx player) (player-width player)))
                           (topA (player-posy player))
                           (bottomA (+ (player-posy player) (player-height player)))
-                          (leftB (coin-posx coin))
-                          (rightB (+ (coin-posx coin) (coin-width coin)))
-                          (topB (coin-posy coin))
-                          (bottomB (+ (coin-posy coin) (coin-height coin))))
+                          (leftB (element-posx element))
+                          (rightB (+ (element-posx element) (element-width element)))
+                          (topB (element-posy element))
+                          (bottomB (+ (element-posy element) (element-height element))))
       (if (<= bottomA topB)
           #f
           (if (>= topA bottomB)
@@ -60,48 +62,24 @@
                   (if (>= leftA rightB)
                       #f
                       #t)))))))
+
+;; End [Check collsion player with something] 
+
 
 (define check-collision-player-with-enemy
   (lambda (player enemy)
-    (let check-collision (
-                          (leftA (player-posx player))
-                          (rightA (+ (player-posx player) (player-width player)))
-                          (topA (player-posy player))
-                          (bottomA (+ (player-posy player) (player-height player)))
-                          (leftB (enemy-posx enemy))
-                          (rightB (+ (enemy-posx enemy) (enemy-width enemy)))
-                          (topB (enemy-posy enemy))
-                          (bottomB (+ (enemy-posy enemy) (enemy-height enemy))))
-      (if (<= bottomA topB)
-          #f
-          (if (>= topA bottomB)
-              #f
-              (if (<= rightA leftB)
-                  #f
-                  (if (>= leftA rightB)
-                      #f
-                      #t)))))))
+    (check-collision-player-with-generic player enemy enemy-posx enemy-posy enemy-width enemy-height)))
+
+(define check-collision-player-with-coin
+  (lambda (player coin)
+    (check-collision-player-with-generic player coin coin-posx coin-posy coin-width coin-height)))
 
 (define check-collision-player-with-finish
   (lambda (player finish)
-    (let check-collision (
-                          (leftA (player-posx player))
-                          (rightA (+ (player-posx player) (player-width player)))
-                          (topA (player-posy player))
-                          (bottomA (+ (player-posy player) (player-height player)))
-                          (leftB (finish-posx finish))
-                          (rightB (+ (finish-posx finish) (finish-width finish)))
-                          (topB (finish-posy finish))
-                          (bottomB (+ (finish-posy finish) (finish-height finish))))
-      (if (<= bottomA topB)
-          #f
-          (if (>= topA bottomB)
-              #f
-              (if (<= rightA leftB)
-                  #f
-                  (if (>= leftA rightB)
-                      #f
-                      #t)))))))
+    (check-collision-player-with-generic player finish finish-posx finish-posy finish-width finish-height)))
+
+
+     
 
 
 
@@ -832,6 +810,8 @@ end-of-shader
                           (set! vertex-data-vector '#f32()))
 
                       ;;End you lost
+
+
 
 
                       ;; (if (eq? (world-gamestates world) 'gamescreen)
