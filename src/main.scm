@@ -53,15 +53,12 @@
                           (rightB (+ (element-posx element) (element-width element)))
                           (topB (element-posy element))
                           (bottomB (+ (element-posy element) (element-height element))))
-      (if (<= bottomA topB)
+      (if  (or (<= bottomA topB)
+               (>= topA bottomB)
+               (<= rightA leftB)
+               (>= leftA rightB))
           #f
-          (if (>= topA bottomB)
-              #f
-              (if (<= rightA leftB)
-                  #f
-                  (if (>= leftA rightB)
-                      #f
-                      #t)))))))
+          #t))))
 
 ;; End [Check collsion player with something] 
 
