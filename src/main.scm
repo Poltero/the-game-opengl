@@ -63,6 +63,8 @@
 ;; End [Check collsion player with something] 
 
 
+;;Call different collision of player with something generic
+
 (define check-collision-player-with-enemy
   (lambda (player enemy)
     (check-collision-player-with-generic player enemy enemy-posx enemy-posy enemy-width enemy-height)))
@@ -75,10 +77,10 @@
   (lambda (player finish)
     (check-collision-player-with-generic player finish finish-posx finish-posy finish-width finish-height)))
 
+;; End [Call different collision of player with something]
 
-     
 
-
+;;Use functions collision of player with something
 
 (define update-player-points-for-take-coin
   (lambda (player coins)
@@ -97,6 +99,8 @@
               (if (check-collision-player-with-enemy player (car rest))
                   #t
                   (loop (cdr rest)))))))
+
+;; End [Use functions collision of player with something]
 
 
 ;;Collision bottom player
@@ -136,19 +140,6 @@
                     #t
                     (loop (cdr rest))))))))
 
-
-
-;; (define collision-down-tiles
-;;   (lambda (player tileslist)
-;;     (let loop ((rest tileslist))
-;;       (unless (null? rest)
-;;           (if (and
-;;                (or (> (player-posx player) (tile-posx (car rest))) (> (+ (player-posx player) 40) (tile-posx (car rest))))
-;;                    (< (player-posx player) (+ (tile-posx (car rest)) 40))
-;;                    (> (player-posy player) (- (tile-posy (car rest)) 39))
-;;                    (< (player-posy player) (tile-posy (car rest))))
-;;               #t
-;;               (loop (cdr rest)))))))
 
 (define collision-down-tiles-enemy
   (lambda (enemy tileslist)
@@ -287,12 +278,19 @@
               #t
               (loop (cdr rest)))))))
 
-
+;; Util function for sort conditions
 (define condition-short
   (lambda (condition values)
     (if condition
         (car values)
         (car (cdr values)))))
+
+;; End
+
+
+
+
+;; Logic for generations maps
 
 (define (create-tiles-map l)
   (let loop ((rest-map world-map) (rest l) (count-x 0) (count-y 0))
@@ -381,6 +379,10 @@
               (loop rest-map rest (+ count-x 1) count-y)
               (loop rest-map rest 0 (+ count-y 1))))
         rest)))
+
+;; End [Logic for generations maps]
+
+;, End [Logic-functions]
 
 
 (define vertex-shader #<<end-of-shader
