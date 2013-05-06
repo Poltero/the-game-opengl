@@ -121,6 +121,20 @@
                     #t
                     (loop (cdr rest))))))))
 
+(define check-collision-bottom-player-with-enemy
+  (lambda (player enemy)
+    (let check-collision (
+                          (leftA (player-posx player))
+                          (rightA (+ (player-posx player) (player-width player)))
+                          (bottomA (+ (player-posy player) (player-height player)))
+                          (leftB (enemy-posx enemy))
+                          (topB (enemy-posy enemy))
+                          (bottomB (+ (enemy-posy enemy) (enemy-height enemy)))
+                          (rightB (+ (enemy-posx enemy) (enemy-width enemy))))
+      (if (and (> bottomA (- topB 20)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
+          #t
+          #f))))
+
 
 ;;Collision bottom enemy
 
@@ -171,6 +185,24 @@
                     #t
                     (loop (cdr rest))))))))
 
+;;Collsion tiles left of enemy
+
+(define check-collision-left-enemies
+  (lambda (player enemies)
+    (let loop ((rest enemies))
+      (unless (null? rest)
+              (let ckeck-collision (
+                                    (rightA (+ (player-posx player) (player-width player)))
+                                    (topA (player-posy player))
+                                    (bottomA (+ (player-posy player) (player-height player)))
+                                    (leftB (enemy-posx (car rest)))
+                                    (leftA (player-posx player))
+                                    (topB (enemy-posy (car rest)))
+                                    (bottomB (+ (enemy-posy (car rest)) (enemy-height (car rest)))))
+                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (>= rightA (- leftB 13)) (<= leftA leftB))
+                    #t
+                    (loop (cdr rest))))))))
+
 
 ;;Collision tiles left of enemy
 (define check-collision-left-tiles-enemy
@@ -190,6 +222,7 @@
                     (loop (cdr rest))))))))
 
 
+
 ;;Collsion tiles right of player
 
 (define check-collision-right-tiles
@@ -205,6 +238,25 @@
                                     (leftA (player-posx player))
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
+                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
+                    #t
+                    (loop (cdr rest))))))))
+
+
+;;Collsion tiles right of enemy
+(define check-collision-right-enemies
+  (lambda (player enemies)
+    (let loop ((rest enemies))
+      (unless (null? rest)
+              (let ckeck-collision (
+                                    (rightA (+ (player-posx player) (player-width player)))
+                                    (topA (player-posy player))
+                                    (bottomA (+ (player-posy player) (player-height player)))
+                                    (leftB (enemy-posx (car rest)))
+                                    (rightB (+ (enemy-posx (car rest)) (enemy-width (car rest))))
+                                    (leftA (player-posx player))
+                                    (topB (enemy-posy (car rest)))
+                                    (bottomB (+ (enemy-posy (car rest)) (enemy-height (car rest)))))
                 (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
                     #t
                     (loop (cdr rest))))))))
@@ -227,44 +279,6 @@
                     #t
                     (loop (cdr rest))))))))
 
-
-
-(define collision-right-tiles
-  (lambda (player tileslist)
-    (let loop ((rest tileslist))
-      (unless (null? rest)
-          (if (and 
-               (or (> (player-posx player) (tile-posx (car rest))) (> (+ (player-posx player) 15) (tile-posx (car rest))))
-               (> (+ (player-posx player) 40) (tile-posx (car rest)))
-               (> (player-posy player) (tile-posy (car rest)))
-               (< (- (player-posy player) 30) (tile-posy (car rest))))
-              #t
-              (loop (cdr rest)))))))
-
-
-(define collision-top-coins
-  (lambda (player coinslist)
-    (let loop ((rest coinslist))
-      (unless (null? rest)
-          (if (and 
-               (or (> (player-posx player) (coin-posx (car rest))) (> (+ (player-posx player) 15) (coin-posx (car rest))))
-                   (< (player-posx player) (+ (coin-posx (car rest)) 15))
-                   (> (player-posy player) (coin-posy (car rest)))
-                   (< (- (player-posy player) 40) (coin-posy (car rest))))
-              (car rest)
-              (loop (cdr rest)))))))
-
-(define collision-down-coins
-  (lambda (player coinslist)
-    (let loop ((rest coinslist))
-      (unless (null? rest)
-          (if (and 
-               (or (> (player-posx player) (coin-posx (car rest))) (> (+ (player-posx player) 15) (coin-posx (car rest))))
-                   (< (player-posx player) (+ (coin-posx (car rest)) 15))
-                   (> (player-posy player) (- (coin-posy (car rest)) 15))
-                   (< (player-posy player) (coin-posy (car rest))))
-              (car rest)
-              (loop (cdr rest)))))))
 
 (define collision-top-tiles
   (lambda (player tileslist)
@@ -793,10 +807,22 @@ end-of-shader
                                                     (player-width player) 
                                                     (player-height player))))
                      
+
+                      
+                      ;;Kill enemies
+                      (let loop ((rest (world-enemies world)))
+                        (unless (null? rest)
+                                (if (not (eq? (enemy-type (car rest)) 'defender))
+                                    (if (check-collision-bottom-player-with-enemy (world-player world) (car rest))
+                                        (begin
+                                          (enemy-posx-set! (car rest) -20.0)
+                                          (loop (cdr rest)))
+                                        (loop (cdr rest))))))
+
                       
 
                       ;;You lost
-                      (when (check-player-crash-enemy (world-player world) (world-enemies world))
+                      (when (or (check-collision-left-enemies (world-player world) (world-enemies world)) (check-collision-right-enemies (world-player world) (world-enemies world)))
                             (world-gamestates-set! world 'lose)
                             (set! vertex-data-vector '#f32()))
 
