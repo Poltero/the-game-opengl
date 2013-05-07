@@ -14,8 +14,8 @@
 
 ;Map level
 (define world-map '#(#(0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(0 0 0 0 0 0 0 0 0 0 0 1 0 0 + 0 0 0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(0 0 0 0 0 0 0 0 +++ 0 0 + 0 0 0 0 0 0 + i i i 0 0 * 0 0 * 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 0 *+ 0 0 0 * 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                         #(0 0 0 0 *+ 0 0 0 0 0 0 1 0 0 + 0 0 0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                         #(0 0 0 |--| 0 0 0 0 +++ 0 0 + 0 0 0 0 0 0 + i i i 0 0 * 0 0 * 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 0 *+ 0 0 0 * 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(+ 0 1 0 0 0 0 0 0 0 0 * i i i 0 * * 0 i 0 0 0 0 0 0 +++ 1 1 + 1 i 0 0 0 0 0 0 0 0 0 0 0 0 |--| 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * * * * * 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(+++ + 1 1 0 1 1 ++ ++ + 0 0 + 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 ++ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1)
                          ))
@@ -32,11 +32,13 @@
 
 (define add-element-to-vector!
   (lambda (x y width height)
+    (pp (f32vector-length vertex-data-vector))
     (set! vertex-data-vector
-          (f32vector-append vertex-data-vector (list->f32vector (list x y 0.0 0.0
-                                                                     (+ x width) y 1.0 0.0
-                                                                     (+ x width) (+ y height) 1.0 1.0
-                                                                     x (+ y height) 0.0 1.0))))))
+          (f32vector-append vertex-data-vector
+                            (f32vector x y 0.0 0.0
+                                       (+ x width) y 1.0 0.0
+                                       (+ x width) (+ y height) 1.0 1.0
+                                       x (+ y height) 0.0 1.0)))))
 
 ;Functions logic game
 
@@ -44,8 +46,7 @@
 
 (define check-collision-player-with-generic 
   (lambda (player element element-posx element-posy element-width element-height)
-    (let check-collision (
-                          (leftA (player-posx player))
+    (let check-collision ((leftA (player-posx player))
                           (rightA (+ (player-posx player) (player-width player)))
                           (topA (player-posy player))
                           (bottomA (+ (player-posy player) (player-height player)))
@@ -53,12 +54,10 @@
                           (rightB (+ (element-posx element) (element-width element)))
                           (topB (element-posy element))
                           (bottomB (+ (element-posy element) (element-height element))))
-      (if  (or (<= bottomA topB)
+      (not (or (<= bottomA topB)
                (>= topA bottomB)
                (<= rightA leftB)
-               (>= leftA rightB))
-          #f
-          #t))))
+               (>= leftA rightB))))))
 
 ;; End [Check collsion player with something] 
 
@@ -131,9 +130,7 @@
                           (topB (enemy-posy enemy))
                           (bottomB (+ (enemy-posy enemy) (enemy-height enemy)))
                           (rightB (+ (enemy-posx enemy) (enemy-width enemy))))
-      (if (and (> bottomA (- topB 20)) (< bottomA bottomB) (>= rightA (+ leftB 10)) (<= leftA (- rightB 10)))
-          #t
-          #f))))
+      (and (> bottomA (- topB 20)) (< bottomA bottomB) (>= rightA (+ leftB 10)) (<= leftA (- rightB 10))))))
 
 
 ;;Collision bottom enemy
@@ -160,10 +157,11 @@
     (let loop ((rest tileslist))
       (unless (null? rest)
           (if (and 
-               (or (> (enemy-posx enemy) (tile-posx (car rest))) (> (+ (enemy-posx enemy) 40) (tile-posx (car rest))))
-                   (< (enemy-posx enemy) (+ (tile-posx (car rest)) 40))
-                   (> (enemy-posy enemy) (- (tile-posy (car rest)) 39))
-                   (< (enemy-posy enemy) (tile-posy (car rest))))
+               (or (> (enemy-posx enemy) (tile-posx (car rest)))
+                   (> (+ (enemy-posx enemy) 40) (tile-posx (car rest))))
+               (< (enemy-posx enemy) (+ (tile-posx (car rest)) 40))
+               (> (enemy-posy enemy) (- (tile-posy (car rest)) 39))
+               (< (enemy-posy enemy) (tile-posy (car rest))))
               #t
               (loop (cdr rest)))))))
 
@@ -622,7 +620,7 @@ end-of-shader
                                             (set! world (make-world 
                                                          'gamescreen
                                                          (create-tiles-map (world-tiles world))
-                                                         (make-camera 0.0 'auto 0.1)
+                                                         (make-camera 0.0 'on 0.1)
                                                          (make-player 400.0 450.0 30.0 30.0 'none 'down 0)
                                                          (create-coins-map (world-coins world))
                                                          (create-enemies-map (world-enemies world))))))
