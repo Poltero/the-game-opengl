@@ -575,53 +575,57 @@ end-of-shader
                                         (quit))
 
                                        ((= key SDLK_RIGHT)
-                                        (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
-                                                                (make-player
-                                                                 (player-posx (world-player world))
-                                                                 (player-posy (world-player world))
-                                                                 (player-width (world-player world))
-                                                                 (player-height (world-player world))
-                                                                 'right
-                                                                 (player-hstate (world-player world))
-                                                                 (player-score (world-player world)))
-                                                                (world-coins world)
-                                                                (world-enemies world))))
+                                        (if (eq? (world-gamestates world) 'gamescreen)
+                                            (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                                    (make-player
+                                                                     (player-posx (world-player world))
+                                                                     (player-posy (world-player world))
+                                                                     (player-width (world-player world))
+                                                                     (player-height (world-player world))
+                                                                     'right
+                                                                     (player-hstate (world-player world))
+                                                                     (player-score (world-player world)))
+                                                                    (world-coins world)
+                                                                    (world-enemies world)))))
                                        
                                        ((= key SDLK_LEFT)
-                                        (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
-                                                                (make-player
-                                                                 (player-posx (world-player world))
-                                                                 (player-posy (world-player world))
-                                                                 (player-width (world-player world))
-                                                                 (player-height (world-player world))
-                                                                 'left
-                                                                 (player-hstate (world-player world))
-                                                                 (player-score (world-player world)))
-                                                                (world-coins world)
-                                                                (world-enemies world))))
+                                        (if (eq? (world-gamestates world) 'gamescreen)
+                                            (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                                    (make-player
+                                                                     (player-posx (world-player world))
+                                                                     (player-posy (world-player world))
+                                                                     (player-width (world-player world))
+                                                                     (player-height (world-player world))
+                                                                     'left
+                                                                     (player-hstate (world-player world))
+                                                                     (player-score (world-player world)))
+                                                                    (world-coins world)
+                                                                    (world-enemies world)))))
 
 
                                        ((= key SDLK_UP)
-                                        (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
-                                                                (make-player
-                                                                 (player-posx (world-player world))
-                                                                 (player-posy (world-player world))
-                                                                 (player-width (world-player world))
-                                                                 (player-height (world-player world))
-                                                                 (player-vstate (world-player world))
-                                                                 'up
-                                                                 (player-score (world-player world)))
-                                                                (world-coins world)
-                                                                (world-enemies world))))
+                                        (if (eq? (world-gamestates world) 'gamescreen)
+                                            (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                                    (make-player
+                                                                     (player-posx (world-player world))
+                                                                     (player-posy (world-player world))
+                                                                     (player-width (world-player world))
+                                                                     (player-height (world-player world))
+                                                                     (player-vstate (world-player world))
+                                                                     'up
+                                                                     (player-score (world-player world)))
+                                                                    (world-coins world)
+                                                                    (world-enemies world)))))
                                        
                                        ((= key SDLK_RETURN)
-                                        (set! world (make-world 
-                                                     'gamescreen
-                                                     (create-tiles-map (world-tiles world))
-                                                     (make-camera 0.0 'on 0.1)
-                                                     (make-player 400.0 450.0 30.0 30.0 'none 'down 0)
-                                                     (create-coins-map (world-coins world))
-                                                     (create-enemies-map (world-enemies world)))))
+                                        (if (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
+                                            (set! world (make-world 
+                                                         'gamescreen
+                                                         (create-tiles-map (world-tiles world))
+                                                         (make-camera 0.0 'auto 0.1)
+                                                         (make-player 400.0 450.0 30.0 30.0 'none 'down 0)
+                                                         (create-coins-map (world-coins world))
+                                                         (create-enemies-map (world-enemies world))))))
                                        (else
                                         (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               
@@ -632,43 +636,46 @@ end-of-shader
                                             (SDL_KeyboardEvent-keysym kevt*))))
                                  (cond 
                                   ((= key SDLK_RIGHT)
-                                   (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
-                                                           (make-player
-                                                            (player-posx (world-player world))
-                                                            (player-posy (world-player world))
-                                                            (player-width (world-player world))
-                                                            (player-height (world-player world))
-                                                            'none
-                                                            (player-hstate (world-player world))
-                                                            (player-score (world-player world)))
-                                                           (world-coins world)
-                                                           (world-enemies world))))
+                                   (if (eq? (world-gamestates world) 'gamescreen)
+                                       (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                               (make-player
+                                                                (player-posx (world-player world))
+                                                                (player-posy (world-player world))
+                                                                (player-width (world-player world))
+                                                                (player-height (world-player world))
+                                                                'none
+                                                                (player-hstate (world-player world))
+                                                                (player-score (world-player world)))
+                                                               (world-coins world)
+                                                               (world-enemies world)))))
 
                                   ((= key SDLK_LEFT)
-                                   (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
-                                                           (make-player
-                                                            (player-posx (world-player world))
-                                                            (player-posy (world-player world))
-                                                            (player-width (world-player world))
-                                                            (player-height (world-player world))
-                                                            'none
-                                                            (player-hstate (world-player world))
-                                                            (player-score (world-player world)))
-                                                           (world-coins world)
-                                                           (world-enemies world))))
+                                   (if (eq? (world-gamestates world) 'gamescreen)
+                                       (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                               (make-player
+                                                                (player-posx (world-player world))
+                                                                (player-posy (world-player world))
+                                                                (player-width (world-player world))
+                                                                (player-height (world-player world))
+                                                                'none
+                                                                (player-hstate (world-player world))
+                                                                (player-score (world-player world)))
+                                                               (world-coins world)
+                                                               (world-enemies world)))))
 
                                   ((= key SDLK_UP)
-                                        (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
-                                                                (make-player
-                                                                 (player-posx (world-player world))
-                                                                 (player-posy (world-player world))
-                                                                 (player-width (world-player world))
-                                                                 (player-height (world-player world))
-                                                                 (player-vstate (world-player world))
-                                                                 (player-hstate (world-player world))
-                                                                 (player-score (world-player world)))
-                                                                (world-coins world)
-                                                                (world-enemies world))))
+                                   (if (eq? (world-gamestates world) 'gamescreen)
+                                       (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                               (make-player
+                                                                (player-posx (world-player world))
+                                                                (player-posy (world-player world))
+                                                                (player-width (world-player world))
+                                                                (player-height (world-player world))
+                                                                (player-vstate (world-player world))
+                                                                (player-hstate (world-player world))
+                                                                (player-score (world-player world)))
+                                                               (world-coins world)
+                                                               (world-enemies world)))))
                                   
                                   (else
                                    (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
