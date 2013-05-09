@@ -594,8 +594,8 @@ end-of-shader
                          (set! number-of-coins count-coins)
                          (set! number-of-enemies count-enemies))))
 
-            
-            (pp number-of-enemies)
+            ;;The 1 represent to player
+            (set! vertex-data-vector (make-vector (+ number-of-tiles number-of-coins number-of-enemies 1)))
             
             
             
