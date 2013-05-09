@@ -29,6 +29,11 @@
 (define-structure world gamestates tiles camera player coins enemies)
 (define vertex-data-vector '#f32())
 
+;; Vars of number elements
+(define number-of-tiles 0)
+(define number-of-enemies 0)
+(define number-of-coins 0)
+
 
 (define add-element-to-vector!
   (lambda (x y width height)
@@ -561,7 +566,38 @@ end-of-shader
 
 
             ;;Init
-            ;(set! time (internal-time/ticks->seconds (process-time-clock)))
+            
+            (let count-elements-of-map ((map-world world-map) (count-x 0) (count-y 0) (count-tiles 0) (count-enemies 0) (count-coins 0))
+              (if (< count-y 5)
+                  (if (< count-x 101)
+                      (case (vector-ref (vector-ref map-world count-y) count-x)
+                        ((1)
+                         (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 4) count-enemies count-coins))
+                        ((+)
+                         (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 4) count-enemies (+ count-coins 4)))
+                        ((2)
+                         (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 8) count-enemies count-coins))
+                        ((+++)
+                         (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 8) count-enemies (+ count-coins 8)))
+                        ((i)
+                         (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 1) count-enemies count-coins))
+                        ((++)
+                         (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 1) count-enemies (+ count-coins 1)))
+                        ((|--|)
+                         (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 9) count-enemies (+ count-coins 8)))
+                        ((* *+)
+                         (count-elements-of-map map-world (+ count-x 1) count-y count-tiles (+ count-enemies 1) count-coins))
+                        ((0)
+                         (count-elements-of-map map-world (+ count-x 1) count-y count-tiles count-enemies count-coins)))
+                      (count-elements-of-map map-world 0 (+ count-y 1) count-tiles count-enemies count-coins))
+                  (begin (set! number-of-tiles count-tiles)
+                         (set! number-of-coins count-coins)
+                         (set! number-of-enemies count-enemies))))
+
+            
+            (pp number-of-enemies)
+            
+            
             
             ;; Game loop
             (let ((event* (alloc-SDL_Event 1)))
