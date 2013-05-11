@@ -200,6 +200,23 @@
                     #t
                     (loop (cdr rest))))))))
 
+(define check-collision-top
+  (lambda (player tiles)
+    (let loop ((rest tiles))
+      (unless (null? rest)
+              (let check-collision (
+                                    (leftA (player-posx player))
+                                    (rightA (+ (player-posx player) (player-width player)))
+                                    (bottomA (+ (player-posy player) (player-height player)))
+                                    (topA (player-posy player))
+                                    (leftB (tile-posx (car rest)))
+                                    (topB (tile-posy (car rest)))
+                                    (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
+                                    (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
+                (if (and (<= topA bottomB) (> topA topB) (>= rightA leftB) (<= leftA rightB))
+                    #t
+                    (loop (cdr rest))))))))
+
 (define check-collision-bottom-player-with-enemy
   (lambda (player enemy)
     (let check-collision (
@@ -358,20 +375,9 @@
                     (loop (cdr rest))))))))
 
 
-(define collision-top-tiles
-  (lambda (player tileslist)
-    (let loop ((rest tileslist))
-      (unless (null? rest)
-          (if (and 
-               (or (> (player-posx player) (tile-posx (car rest))) (> (+ (player-posx player) 15) (tile-posx (car rest))))
-               (< (player-posx player)  (+ ( tile-posx (car rest)) 40))
-               (> (player-posy player) (tile-posy (car rest)))
-               (< (- (player-posy player) 40) (tile-posy (car rest))))
-              #t
-              (loop (cdr rest)))))))
 
 ;; Util function for sort conditions
-(define condition-short
+(define condition-sort
   (lambda (condition values)
     (if condition
         (car values)
@@ -430,26 +436,26 @@
              (let create-plataform-with-coins ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                (if (< number 4)
                    (begin
-                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-short (< count-y 2) '(98 102)))) 15.0 15.0 10 'yellow) rest))
+                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-sort (< count-y 2) '(98 102)))) 15.0 15.0 10 'yellow) rest))
                      (create-plataform-with-coins (+ number 1) (+ posx 40))))))
             ((++)
              (let create-plataform-with-coins-special ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                (if (< number 1)
                    (begin
-                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-short (< count-y 2) '(88 102)) )) 15.0 15.0 50 'green) rest))
+                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-sort (< count-y 2) '(88 102)) )) 15.0 15.0 50 'green) rest))
                      (create-plataform-with-coins-special (+ number 1) (+ posx 40))))))
             ((|--|)
              (let create-plataform-with-coins-doubles ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                (if (< number 8)
                    (begin
-                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-short (< count-y 2) '(98 102)))) 15.0 15.0 10 'yellow) rest))
+                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-sort (< count-y 2) '(98 102)))) 15.0 15.0 10 'yellow) rest))
                      (create-plataform-with-coins-doubles (+ number 1) (+ posx 40))))))
 
             ((+++)
              (let create-plataform-with-coins-doubles ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                (if (< number 8)
                    (begin
-                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-short (< count-y 2) '(98 102)))) 15.0 15.0 10 'yellow) rest))
+                     (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-sort (< count-y 2) '(98 102)))) 15.0 15.0 10 'yellow) rest))
                      (create-plataform-with-coins-doubles (+ number 1) (+ posx 40)))))))
           (if (< count-x 101)
               (loop rest-map rest (+ count-x 1) count-y)
@@ -835,7 +841,7 @@ end-of-shader
 
 
                       (if (eq? (player-hstate (world-player world)) 'jump) 
-                          (if (not (collision-top-tiles (world-player world) (world-tiles world)))
+                          (if (not (check-collision-top (world-player world) (world-tiles world)))
                               (begin 
                                 (if (= position-y-origin (player-posy (world-player world)))
                                     (set! position-y-origin (- (player-posy (world-player world)) -50)))
@@ -857,8 +863,12 @@ end-of-shader
                       
                       
                       ;;Set camera
-                      (if (eq? (camera-state (world-camera world)) 'auto)
-                          (camera-position-set! (world-camera world) (+ (camera-position (world-camera world)) (* (camera-speed (world-camera world)) delta-time))))
+                      (when (eq? (camera-state (world-camera world)) 'auto)
+                          (camera-position-set! 
+                           (world-camera world) (+ (camera-position (world-camera world)) (* (camera-speed (world-camera world)) delta-time)))
+                          (set-player! (world-player world) (world-camera world) 0)
+                          (set-tiles! (world-tiles world) (world-camera world) 1)
+                          (set-coins! (world-coins world) (world-camera world) (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
 
                       
 
