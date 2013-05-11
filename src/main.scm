@@ -6,7 +6,7 @@
 (define last-time 0)
 
 ;Level dimension
-(define level-width 10000.0)
+(define level-width 100000.0)
 (define level-height 400.0)
 
 ;Global position origin y
@@ -59,6 +59,56 @@
       (when (< count 16)
           (f32vector-set! vertex-data-vector (+ (* index 16) count) (f32vector-ref vector count))
           (recur (+ count 1))))))
+
+
+(define set-player! 
+  (lambda (player camera start)
+    (set-element-in-vector!
+     start
+     (create-f32vector! 
+      (exact->inexact (- (player-posx player) (camera-position camera)))
+      (exact->inexact (player-posy player))
+      (player-width player)
+      (player-height player)))))
+
+(define set-tiles! 
+  (lambda (tiles camera start)
+    (let set-tiles-in-vector! ((rest tiles) (count start))
+      (when (not (null? rest))
+            (set-element-in-vector!
+             count
+             (create-f32vector! 
+              (exact->inexact (- (tile-posx (car rest)) (camera-position camera)))
+              (exact->inexact (tile-posy (car rest)))
+              (tile-width (car rest))
+              (tile-height (car rest))))
+            (set-tiles-in-vector! (cdr rest) (+ count 1))))))
+
+(define set-enemies! 
+  (lambda (enemies camera start)
+    (let set-enemies-in-vector! ((rest enemies) (count start))
+      (when (not (null? rest))
+            (set-element-in-vector!
+             count
+             (create-f32vector! 
+              (exact->inexact (- (enemy-posx (car rest)) (camera-position camera)))
+              (exact->inexact (enemy-posy (car rest)))
+              (enemy-width (car rest))
+              (enemy-height (car rest))))
+            (set-enemies-in-vector! (cdr rest) (+ count 1))))))
+
+(define set-coins! 
+  (lambda (coins camera start)
+    (let set-coins-in-vector! ((rest coins) (count start))
+      (when (not (null? rest))
+            (set-element-in-vector!
+             count
+             (create-f32vector! 
+              (exact->inexact (- (coin-posx (car rest)) (camera-position camera)))
+              (exact->inexact (coin-posy (car rest)))
+              (coin-width (car rest))
+              (coin-height (car rest))))
+            (set-coins-in-vector! (cdr rest) (+ count 1))))))
 
 
 ;Functions logic game
@@ -681,8 +731,8 @@ end-of-shader
                                                                                       (+ (length (world-tiles world))
                                                                                          (length (world-coins world))
                                                                                          (length (world-enemies world))
-                                                                                         1)
-                                                                                      16) 0.0))
+                                                                                         2)
+                                                                                      17) 0.0))
 
                                             ;(pp (+ (length (world-tiles world)) 1 (length (world-enemies world)) (length (world-coins world))))
                                             ;(pp (f32vector-length vertex-data-vector))
@@ -701,49 +751,12 @@ end-of-shader
                                                 (player-width player) 
                                                 (player-height player)))
                                               
-                                              (set! count (+ count 1))
-
-                                              (let recur-tiles ((rest tiles))
-                                                (unless (null? rest)
-                                                        (set-element-in-vector!
-                                                         count
-                                                         (create-f32vector!           
-                                                          (exact->inexact (- (tile-posx (car rest)) (camera-position (world-camera world))))
-                                                          (exact->inexact (tile-posy (car rest)))
-                                                          (tile-width (car rest))
-                                                          (tile-height (car rest))))
-                                                        (set! count (+ count 1))
-                                                        (recur-tiles (cdr rest))))
-
-                                              
-                                              (let recur-enemies ((rest enemies))
-                                                (unless (null? rest)
-                                                        (set-element-in-vector!
-                                                         count
-                                                         (create-f32vector!           
-                                                          (exact->inexact (- (enemy-posx (car rest)) (camera-position (world-camera world))))
-                                                          (exact->inexact (enemy-posy (car rest)))
-                                                          (enemy-width (car rest))
-                                                          (enemy-height (car rest))))
-                                                        (set! count (+ count 1))
-                                                        (recur-enemies (cdr rest))))
-
-                                              
-                                              (let recur-coins ((rest coins))
-                                                (unless (null? rest)
-                                                        (set-element-in-vector!
-                                                         count
-                                                         (create-f32vector!           
-                                                          (exact->inexact (- (coin-posx (car rest)) (camera-position (world-camera world))))
-                                                          (exact->inexact (coin-posy (car rest)))
-                                                          (coin-width (car rest))
-                                                          (coin-height (car rest))))
-                                                        (set! count (+ count 1))
-                                                        (recur-coins (cdr rest))))))
-                                        
-                                        
-                                        ;(pp (length (world-coins world)))
-                                        )
+                                              (set-tiles! 
+                                               tiles (world-camera world) 1)
+                                              (set-enemies! 
+                                               enemies (world-camera world) (+ (length tiles) 1))
+                                              (set-coins! 
+                                               coins (world-camera world) (+ (length tiles) (length enemies) 1)))))
                                        
                                        
                                        (else
@@ -821,14 +834,23 @@ end-of-shader
                             (begin
                               (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
                               (if (eq? (camera-state camera) 'on)
-                                  (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time)))))))
+                                  (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time)))))
+                            
+                            (set-player! (world-player world) (world-camera world) 0)
+                            (set-tiles! (world-tiles world) (world-camera world) 1)
+                            (set-coins! (world-coins world) (world-camera world) (+ (length (world-tiles world)) 1 (length (world-enemies world))))))
                       
                       (if (and (eq? (player-vstate (world-player world)) 'right) (not (check-collision-left-tiles (world-player world) (world-tiles world))))
                           (let player-right ((camera (world-camera world)) (tiles (world-tiles world)) (player (world-player world)))
                             (begin
                               (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
                               (if (eq? (camera-state camera) 'on)
-                                  (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))))
+                                  (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))
+                            
+                            
+                            (set-player! (world-player world) (world-camera world) 0)
+                            (set-tiles! (world-tiles world) (world-camera world) 1)
+                            (set-coins! (world-coins world) (world-camera world) (+ (length (world-tiles world)) 1 (length (world-enemies world))))))
 
                       (if (eq? (player-hstate (world-player world)) 'up) 
                           (if (check-collision-bottom (world-player world) (world-tiles world))
@@ -842,13 +864,15 @@ end-of-shader
                                 (if (= position-y-origin (player-posy (world-player world)))
                                     (set! position-y-origin (- (player-posy (world-player world)) -50)))
                                 (let player-up ((player (world-player world)))
-                                  (player-posy-set! player (- (player-posy player) (* 0.3 delta-time)))))
+                                  (player-posy-set! player (- (player-posy player) (* 0.3 delta-time)))
+                                  (set-player! (world-player world) (world-camera world) 0)))
                               (player-hstate-set! (world-player world) 'down)))
 
 
                       (if (and (eq? (player-hstate (world-player world)) 'down) (not (check-collision-bottom (world-player world) (world-tiles world))))
                           (let player-down ((player (world-player world)))
-                            (player-posy-set! player (+ (player-posy player) (* 0.3 delta-time)))))
+                            (player-posy-set! player (+ (player-posy player) (* 0.3 delta-time)))
+                            (set-player! (world-player world) (world-camera world) 0)))
 
                       
                       ;Control limits jump
@@ -874,14 +898,7 @@ end-of-shader
                       
                       
                       ;; ;;Add all tiles of the world to buffer
-                      ;; (let add-all-tiles-of-world ((rest (world-tiles world)))
-                      ;;   (when (not (null? rest))
-                      ;;         (add-element-to-vector! 
-                      ;;          (exact->inexact (- (tile-posx (car rest)) (camera-position (world-camera world))))
-                      ;;          (exact->inexact (tile-posy (car rest)))
-                      ;;          (tile-width (car rest))
-                      ;;          (tile-height (car rest)))
-                      ;;         (add-all-tiles-of-world (cdr rest))))
+                      
 
                       
                       ;;Add all coins of the world to buffer
@@ -949,9 +966,9 @@ end-of-shader
                       
 
                       ;;You lost
-                      (when (or (check-collision-left-enemies (world-player world) (world-enemies world)) (check-collision-right-enemies (world-player world) (world-enemies world)))
-                            (world-gamestates-set! world 'lose)
-                            (set! vertex-data-vector '#f32()))
+                      ;; (when (or (check-collision-left-enemies (world-player world) (world-enemies world)) (check-collision-right-enemies (world-player world) (world-enemies world)))
+                      ;;       (world-gamestates-set! world 'lose)
+                      ;;       (set! vertex-data-vector '#f32()))
 
                       (when (< (- (player-posx (world-player world)) (camera-position (world-camera world))) (* -1 (player-width (world-player world))))
                           (world-gamestates-set! world 'lose)
