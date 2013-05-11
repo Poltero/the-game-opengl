@@ -14,7 +14,7 @@
 
 ;Map level
 (define world-map '#(#(0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 *+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(0 0 0 0 *+ 0 0 0 0 0 0 1 0 0 + 0 0 0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 |--| 0 0 0 0 0 * 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                         #(0 0 0 0 *+ 0 0 0 0 0 0 1 0 0 + 0 0 0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 ++ 0 0 0 0 |--| 0 0 0 0 0 * 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(0 0 0 |--| 0 0 0 0 +++ 0 0 + 0 0 0 0 0 0 + i i i 0 0 * 0 0 * 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 0 *+ 0 0 0 * 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(+ 0 1 0 0 0 0 0 0 0 0 * i i i 0 * * 0 i 0 0 0 0 0 0 +++ 1 1 + 1 i 0 0 0 0 0 0 0 0 0 0 0 0 |--| 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * * * * * 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(+++ + 1 1 0 1 1 ++ ++ + 0 0 + 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 ++ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1)
@@ -43,16 +43,22 @@
                                        (+ x width) y 1.0 0.0
                                        (+ x width) (+ y height) 1.0 1.0
                                        x (+ y height) 0.0 1.0)))))
+(define create-f32vector!
+  (lambda (x y width height)
+    (let ((vector 
+           (f32vector x y 0.0 0.0
+                      (+ x width) y 1.0 0.0
+                      (+ x width) (+ y height) 1.0 1.0
+                      x (+ y height) 0.0 1.0)))
+      vector)))
+
 
 (define set-element-in-vector!
-  (lambda (x y width height)
-    (pp (f32vector-length vertex-data-vector))
-    (set! vertex-data-vector
-          (f32vector-append vertex-data-vector
-                            (f32vector x y 0.0 0.0
-                                       (+ x width) y 1.0 0.0
-                                       (+ x width) (+ y height) 1.0 1.0
-                                       x (+ y height) 0.0 1.0)))))
+  (lambda (index vector)
+    (let recur ((count 0))
+      (when (< count 16)
+          (f32vector-set! vertex-data-vector (+ (* index 16) count) (f32vector-ref vector count))
+          (recur (+ count 1))))))
 
 
 ;Functions logic game
@@ -595,9 +601,9 @@ end-of-shader
                          (set! number-of-enemies count-enemies))))
 
             ;;The 1 represent to player
-            (set! vertex-data-vector (make-vector (+ number-of-tiles number-of-coins number-of-enemies 1)))
+            (set! vertex-data-vector (make-f32vector (+ number-of-tiles number-of-coins number-of-enemies 1) 0.0))
             
-            
+            (pp (f32vector-length vertex-data-vector))
             
             ;; Game loop
             (let ((event* (alloc-SDL_Event 1)))
@@ -662,14 +668,75 @@ end-of-shader
                                                                     (world-enemies world)))))
                                        
                                        ((= key SDLK_RETURN)
-                                        (if (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
+                                        (when (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
                                             (set! world (make-world 
                                                          'gamescreen
                                                          (create-tiles-map (world-tiles world))
                                                          (make-camera 0.0 'on 0.1)
                                                          (make-player 400.0 450.0 30.0 30.0 'none 'down 0)
                                                          (create-coins-map (world-coins world))
-                                                         (create-enemies-map (world-enemies world))))))
+                                                         (create-enemies-map (world-enemies world))))
+
+                                            (pp (+ (length (world-tiles world)) 1 (length (world-enemies world)) (length (world-coins world))))
+                                            (let init-vector-with-all-elements! ((count 0) 
+                                                                                             (player (world-player world)) 
+                                                                                             (tiles (world-tiles world)) 
+                                                                                             (enemies (world-enemies world)) 
+                                                                                             (coins (world-coins world)))
+                                              
+                                              (set-element-in-vector! 
+                                               count 
+                                               (create-f32vector!
+                                                (- (player-posx player) (camera-position (world-camera world)))
+                                                (player-posy player) 
+                                                (player-width player) 
+                                                (player-height player)))
+                                              
+                                              (set! count (+ count 1))
+
+                                              (let recur-tiles ((rest tiles))
+                                                (unless (null? rest)
+                                                        (set-element-in-vector!
+                                                         count
+                                                         (create-f32vector!           
+                                                          (exact->inexact (- (tile-posx (car rest)) (camera-position (world-camera world))))
+                                                          (exact->inexact (tile-posy (car rest)))
+                                                          (tile-width (car rest))
+                                                          (tile-height (car rest))))
+                                                        (set! count (+ count 1))
+                                                        (recur-tiles (cdr rest))))
+
+                                              
+                                              (let recur-enemies ((rest enemies))
+                                                (unless (null? rest)
+                                                        (set-element-in-vector!
+                                                         count
+                                                         (create-f32vector!           
+                                                          (exact->inexact (- (enemy-posx (car rest)) (camera-position (world-camera world))))
+                                                          (exact->inexact (enemy-posy (car rest)))
+                                                          (enemy-width (car rest))
+                                                          (enemy-height (car rest))))
+                                                        (set! count (+ count 1))
+                                                        (recur-enemies (cdr rest))))
+
+                                              
+                                              (let recur-coins ((rest coins))
+                                                (unless (null? rest)
+                                                        (set-element-in-vector!
+                                                         count
+                                                         (create-f32vector!           
+                                                          (exact->inexact (- (coin-posx (car rest)) (camera-position (world-camera world))))
+                                                          (exact->inexact (coin-posy (car rest)))
+                                                          (coin-width (car rest))
+                                                          (coin-height (car rest))))
+                                                        (set! count (+ count 1))
+                                                        (recur-coins (cdr rest))))))
+                                        
+                                        
+                                        ;(pp (length (world-coins world)))
+                                        )
+                                       
+                                       
                                        (else
                                         (SDL_LogVerbose SDL_LOG_CATEGORY_APPLICATION (string-append "Key: " (number->string key)))))))
                               
@@ -726,7 +793,7 @@ end-of-shader
                               (else #f)))
                            (event-loop)))
                    
-                   (set! vertex-data-vector '#f32())
+                   ;(set! vertex-data-vector '#f32())
                    
                    (case (world-gamestates world)
                      ((lose)
@@ -797,78 +864,78 @@ end-of-shader
                       (update-player-points-for-take-coin (world-player world) (world-coins world))
                       
                       
-                      ;;Add all tiles of the world to buffer
-                      (let add-all-tiles-of-world ((rest (world-tiles world)))
-                        (when (not (null? rest))
-                              (add-element-to-vector! 
-                               (exact->inexact (- (tile-posx (car rest)) (camera-position (world-camera world))))
-                               (exact->inexact (tile-posy (car rest)))
-                               (tile-width (car rest))
-                               (tile-height (car rest)))
-                              (add-all-tiles-of-world (cdr rest))))
+                      ;; ;;Add all tiles of the world to buffer
+                      ;; (let add-all-tiles-of-world ((rest (world-tiles world)))
+                      ;;   (when (not (null? rest))
+                      ;;         (add-element-to-vector! 
+                      ;;          (exact->inexact (- (tile-posx (car rest)) (camera-position (world-camera world))))
+                      ;;          (exact->inexact (tile-posy (car rest)))
+                      ;;          (tile-width (car rest))
+                      ;;          (tile-height (car rest)))
+                      ;;         (add-all-tiles-of-world (cdr rest))))
 
                       
                       ;;Add all coins of the world to buffer
-                      (let add-all-coins-of-world ((rest (world-coins world)))
-                        (when (not (null? rest))
-                              (add-element-to-vector!
-                               (exact->inexact (- (coin-posx (car rest)) (camera-position (world-camera world))))
-                               (exact->inexact (coin-posy (car rest)))
-                               (coin-width (car rest))
-                               (coin-height (car rest)))
-                              (add-all-coins-of-world (cdr rest))))
+                      ;; (let add-all-coins-of-world ((rest (world-coins world)))
+                      ;;   (when (not (null? rest))
+                      ;;         (add-element-to-vector!
+                      ;;          (exact->inexact (- (coin-posx (car rest)) (camera-position (world-camera world))))
+                      ;;          (exact->inexact (coin-posy (car rest)))
+                      ;;          (coin-width (car rest))
+                      ;;          (coin-height (car rest)))
+                      ;;         (add-all-coins-of-world (cdr rest))))
                       
 
                       ;;Add all enemies of the world to buffer
-                      (let add-all-enemies-of-world ((rest (world-enemies world)))
-                        (when (not (null? rest))
-                              (case (enemy-type (car rest))
-                                ((kamikaze)
-                                 (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
-                                     (begin 
-                                       (if (not (check-collision-right-tiles-enemy (car rest) (world-tiles world))) 
-                                           (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
-                                           (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                                       (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                                     (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
-                                ((defender)
-                                 (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
-                                     (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                                 (if (check-collision-right-tiles-enemy (car rest) (world-tiles world))
-                                     (enemy-direction-set! (car rest) 'right)
-                                     (if (check-collision-left-tiles-enemy (car rest) (world-tiles world))
-                                         (enemy-direction-set! (car rest) 'left)))
-                                 (if (eq? (enemy-direction (car rest)) 'right)
-                                     (enemy-posx-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time)))
-                                     (if (eq? (enemy-direction (car rest)) 'left)
-                                         (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))))
-                              (add-element-to-vector!
-                               (exact->inexact (- (enemy-posx (car rest)) (camera-position (world-camera world))))
-                               (exact->inexact (enemy-posy (car rest)))
-                               (enemy-width (car rest))
-                               (enemy-height (car rest)))
-                              (add-all-enemies-of-world (cdr rest))))
+                      ;; (let add-all-enemies-of-world ((rest (world-enemies world)))
+                      ;;   (when (not (null? rest))
+                      ;;         (case (enemy-type (car rest))
+                      ;;           ((kamikaze)
+                      ;;            (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                      ;;                (begin 
+                      ;;                  (if (not (check-collision-right-tiles-enemy (car rest) (world-tiles world))) 
+                      ;;                      (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
+                      ;;                      (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                      ;;                  (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                      ;;                (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
+                      ;;           ((defender)
+                      ;;            (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                      ;;                (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                      ;;            (if (check-collision-right-tiles-enemy (car rest) (world-tiles world))
+                      ;;                (enemy-direction-set! (car rest) 'right)
+                      ;;                (if (check-collision-left-tiles-enemy (car rest) (world-tiles world))
+                      ;;                    (enemy-direction-set! (car rest) 'left)))
+                      ;;            (if (eq? (enemy-direction (car rest)) 'right)
+                      ;;                (enemy-posx-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time)))
+                      ;;                (if (eq? (enemy-direction (car rest)) 'left)
+                      ;;                    (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))))
+                      ;;         (add-element-to-vector!
+                      ;;          (exact->inexact (- (enemy-posx (car rest)) (camera-position (world-camera world))))
+                      ;;          (exact->inexact (enemy-posy (car rest)))
+                      ;;          (enemy-width (car rest))
+                      ;;          (enemy-height (car rest)))
+                      ;;         (add-all-enemies-of-world (cdr rest))))
                       
                       
                       ;;Add player to buffer
-                      (if (eq? (world-gamestates world) 'gamescreen)
-                          (let add-player-to-buffer ((player (world-player world)))
-                            (add-element-to-vector! (- (player-posx player) (camera-position (world-camera world)))
-                                                    (player-posy player) 
-                                                    (player-width player) 
-                                                    (player-height player))))
+                      ;; (if (eq? (world-gamestates world) 'gamescreen)
+                      ;;     (let add-player-to-buffer ((player (world-player world)))
+                      ;;       (add-element-to-vector! (- (player-posx player) (camera-position (world-camera world)))
+                      ;;                               (player-posy player) 
+                      ;;                               (player-width player) 
+                      ;;                               (player-height player))))
                      
 
                       
-                      ;;Kill enemies
-                      (let loop ((rest (world-enemies world)))
-                        (unless (null? rest)
-                                (if (not (eq? (enemy-type (car rest)) 'defender))
-                                    (if (check-collision-bottom-player-with-enemy (world-player world) (car rest))
-                                        (begin
-                                          (enemy-posx-set! (car rest) -20.0)
-                                          (loop (cdr rest)))
-                                        (loop (cdr rest))))))
+                      ;; ;;Kill enemies
+                      ;; (let loop ((rest (world-enemies world)))
+                      ;;   (unless (null? rest)
+                      ;;           (if (not (eq? (enemy-type (car rest)) 'defender))
+                      ;;               (if (check-collision-bottom-player-with-enemy (world-player world) (car rest))
+                      ;;                   (begin
+                      ;;                     (enemy-posx-set! (car rest) -20.0)
+                      ;;                     (loop (cdr rest)))
+                      ;;                   (loop (cdr rest))))))
 
                       
 
