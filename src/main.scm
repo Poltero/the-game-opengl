@@ -153,14 +153,23 @@
 ;;Use functions collision of player with something
 
 (define update-player-points-for-take-coin
-  (lambda (player coins)
-    (let loop ((rest coins))
+  (lambda (player coins start)
+    (let loop ((rest coins) (count start))
       (unless (null? rest)
               (if (check-collision-player-with-coin player (car rest))
                   (begin
-                    (coin-posx-set! (car rest) -20)
+                    (destroy-coin! (car rest))
+                    (set-element-in-vector!
+                     count (make-f32vector 16 0.0))
                     (player-score-set! player (+ (player-score player) (coin-points (car rest)))))
-                  (loop (cdr rest)))))))
+                  (loop (cdr rest) (+ count 1)))))))
+
+(define destroy-coin!
+  (lambda (coin)
+    (coin-posx-set! coin 0.0)
+    (coin-posy-set! coin 0.0)
+    (coin-width-set! coin 0.0)
+    (coin-height-set! coin 0.0)))
 
 (define check-player-crash-enemy
   (lambda (player enemies)
@@ -619,41 +628,8 @@ end-of-shader
             (glBindBuffer GL_ARRAY_BUFFER 0)
             (glBindVertexArray 0)
 
-
-
-            ;;Init
             
-            ;; (let count-elements-of-map ((map-world world-map) (count-x 0) (count-y 0) (count-tiles 0) (count-enemies 0) (count-coins 0))
-            ;;   (if (< count-y 5)
-            ;;       (if (< count-x 101)
-            ;;           (case (vector-ref (vector-ref map-world count-y) count-x)
-            ;;             ((1)
-            ;;              (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 4) count-enemies count-coins))
-            ;;             ((+)
-            ;;              (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 4) count-enemies (+ count-coins 4)))
-            ;;             ((2)
-            ;;              (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 8) count-enemies count-coins))
-            ;;             ((+++)
-            ;;              (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 8) count-enemies (+ count-coins 8)))
-            ;;             ((i)
-            ;;              (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 1) count-enemies count-coins))
-            ;;             ((++)
-            ;;              (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 1) count-enemies (+ count-coins 1)))
-            ;;             ((|--|)
-            ;;              (count-elements-of-map map-world (+ count-x 1) count-y (+ count-tiles 9) count-enemies (+ count-coins 8)))
-            ;;             ((* *+)
-            ;;              (count-elements-of-map map-world (+ count-x 1) count-y count-tiles (+ count-enemies 1) count-coins))
-            ;;             ((0)
-            ;;              (count-elements-of-map map-world (+ count-x 1) count-y count-tiles count-enemies count-coins)))
-            ;;           (count-elements-of-map map-world 0 (+ count-y 1) count-tiles count-enemies count-coins))
-            ;;       (begin (set! number-of-tiles count-tiles)
-            ;;              (set! number-of-coins count-coins)
-            ;;              (set! number-of-enemies count-enemies))))
-
-            ;;The 1 represent to player
-            
-            
-            (pp (f32vector-length vertex-data-vector))
+           
             
             ;; Game loop
             (let ((event* (alloc-SDL_Event 1)))
@@ -894,7 +870,9 @@ end-of-shader
 
 
                       ;Calculate collision with coins
-                      (update-player-points-for-take-coin (world-player world) (world-coins world))
+                      (update-player-points-for-take-coin 
+                       (world-player world) (world-coins world) (+ (length (world-tiles world)) 1 (length (world-enemies world))))
+
                       
                       
                       ;; ;;Add all tiles of the world to buffer
