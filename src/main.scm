@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
-;eoo
+
 ;Vars of control time
 (define delta-time 0)
 (define last-time 0)
@@ -33,6 +33,8 @@
 (define number-of-tiles 0)
 (define number-of-enemies 0)
 (define number-of-coins 0)
+(define max-count-x 0)
+
 
 
 (define add-element-to-vector!
@@ -428,7 +430,7 @@
                   (when (= number 7)
                         (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest))
                         (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 100)) 40.0 40.0) rest))))))
-          (if (< count-x 101)
+          (if (< count-x max-count-x)
               (loop rest-map rest (+ count-x 1) count-y)
               (loop rest-map rest 0 (+ count-y 1))))
         rest)))
@@ -463,7 +465,7 @@
                    (begin
                      (set! rest (cons (make-coin (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) (condition-sort (< count-y 2) '(98 102)))) 15.0 15.0 10 'yellow) rest))
                      (create-plataform-with-coins-doubles (+ number 1) (+ posx 40)))))))
-          (if (< count-x 101)
+          (if (< count-x max-count-x)
               (loop rest-map rest (+ count-x 1) count-y)
               (loop rest-map rest 0 (+ count-y 1))))
         rest)))
@@ -479,7 +481,7 @@
             ((*+)
              (let create-enemy-defender ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                (set! rest (cons (make-enemy (exact->inexact (+ posx 50)) (exact->inexact (* (+ 0.7 count-y) 99)) 40.0 40.0 10 'defender 'left) rest)))))
-          (if (< count-x 101)
+          (if (< count-x max-count-x)
               (loop rest-map rest (+ count-x 1) count-y)
               (loop rest-map rest 0 (+ count-y 1))))
         rest)))
@@ -641,7 +643,7 @@ end-of-shader
             (glBindVertexArray 0)
 
             
-           
+            (pp (vector-length (vector-ref world-map 0)))
             
             ;; Game loop
             (let ((event* (alloc-SDL_Event 1)))
@@ -707,7 +709,8 @@ end-of-shader
                                        
                                        ((= key SDLK_RETURN)
                                         (when (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
-                                            (set! world (make-world 
+                                              (set! max-count-x (- (vector-length (vector-ref world-map 0)) 1))
+                                              (set! world (make-world 
                                                          'gamescreen
                                                          (create-tiles-map (world-tiles world))
                                                          (make-camera 0.0 'on 0.1)
@@ -725,6 +728,8 @@ end-of-shader
                                                   (set! size (+ size 2)))
                                               (pp size)
                                               (set! vertex-data-vector (make-f32vector size 0.0)))
+
+                                            
 
                                             ;(pp (+ (length (world-tiles world)) 1 (length (world-enemies world)) (length (world-coins world))))
                                             ;(pp (f32vector-length vertex-data-vector))
