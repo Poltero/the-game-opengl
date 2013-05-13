@@ -9,6 +9,8 @@
 (define level-width 100000.0)
 (define level-height 400.0)
 
+(define level-final 0)
+
 ;Global position origin y
 (define position-y-origin 0)
 
@@ -17,7 +19,7 @@
                          #(0 0 0 0 *+ 0 0 0 0 0 0 1 0 0 + 0 0 0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 ++ 0 0 0 0 |--| 0 0 0 0 0 * 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(0 0 0 |--| 0 0 0 0 +++ 0 0 + 0 0 0 0 0 0 + i i i 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 0 *+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(+ 0 1 0 0 0 0 0 0 0 0 * i i i 0 * * 0 i 0 0 0 * * 0 +++ 1 1 + 1 i 0 0 0 0 0 0 0 0 0 0 0 * |--| 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * * * * * 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(+++ + 1 1 1 1 1 ++ ++ + 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ++ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1)
+                         #(+++ + 1 1 1 1 1 ++ ++ + 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ++ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 final)
                          ))
 
 
@@ -429,7 +431,10 @@
                         (create-plataform-for-enemy (+ number 1) (+ posx 39)))
                   (when (= number 7)
                         (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest))
-                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 100)) 40.0 40.0) rest))))))
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 100)) 40.0 40.0) rest)))))
+            (if (eq? element 'final)
+                (let create-final-level ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+                  (set! level-final posx))))
           (if (< count-x max-count-x)
               (loop rest-map rest (+ count-x 1) count-y)
               (loop rest-map rest 0 (+ count-y 1))))
@@ -729,6 +734,9 @@ end-of-shader
                                               (pp size)
                                               (set! vertex-data-vector (make-f32vector size 0.0)))
 
+                                            (pp "Final level: ")
+                                            (pp level-final)
+
                                             
 
                                             ;(pp (+ (length (world-tiles world)) 1 (length (world-enemies world)) (length (world-coins world))))
@@ -890,7 +898,9 @@ end-of-shader
                       ;;keep the camera in bounds
                       (if (< (camera-position (world-camera world)) 0)
                           (camera-position-set! (world-camera world) 0))
-                      (if (> (camera-position (world-camera world)) (- level-width (camera-position (world-camera world))))
+
+                      
+                      (if (> (camera-position (world-camera world)) (- level-final 640))
                           (world-gamestates-set! world 'win))
 
 
@@ -899,6 +909,7 @@ end-of-shader
                        (world-player world) (world-coins world) (+ (length (world-tiles world)) 1 (length (world-enemies world))))
 
                       
+                      ;;(pp (camera-position (world-camera world)))
                       
                       ;; ;;Add all tiles of the world to buffer
                       
