@@ -240,7 +240,7 @@
   (lambda (enemy tiles)
     (let loop ((rest tiles))
       (unless (null? rest)
-              (when (<  (- (tile-posx (car rest)) (enemy-posx enemy) 1280))
+              (when (<  (- (tile-posx (car rest)) (enemy-posx enemy) 200))
                     (let check-collision (
                                           (leftA (enemy-posx enemy))
                                           (rightA (+ (enemy-posx enemy) (enemy-width enemy)))
@@ -994,7 +994,7 @@ end-of-shader
                       ;; ;;Kill enemies
                       (let loop ((rest (world-enemies world)) (count (+ (length (world-tiles world)) 1)))
                         (unless (null? rest)
-                                (if  (< (abs (- (enemy-posx (car rest)) (player-posx (world-player world)))) 500)
+                                (if  (< (abs (- (enemy-posx (car rest)) (player-posx (world-player world)))) 100)
                                      (begin 
                                        (if (check-collision-bottom-player-with-enemy (world-player world) (car rest))
                                            (begin
