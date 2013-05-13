@@ -236,17 +236,18 @@
   (lambda (enemy tiles)
     (let loop ((rest tiles))
       (unless (null? rest)
-              (let check-collision (
-                                    (leftA (enemy-posx enemy))
-                                    (rightA (+ (enemy-posx enemy) (enemy-width enemy)))
-                                    (bottomA (+ (enemy-posy enemy) (enemy-height enemy)))
-                                    (leftB (tile-posx (car rest)))
-                                    (topB (tile-posy (car rest)))
-                                    (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
-                                    (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
-                (if (and (> bottomA (- topB 3)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
-                    #t
-                    (loop (cdr rest))))))))
+              (when (<  (- (tile-posx (car rest)) (enemy-posx enemy) 1280))
+                    (let check-collision (
+                                          (leftA (enemy-posx enemy))
+                                          (rightA (+ (enemy-posx enemy) (enemy-width enemy)))
+                                          (bottomA (+ (enemy-posy enemy) (enemy-height enemy)))
+                                          (leftB (tile-posx (car rest)))
+                                          (topB (tile-posy (car rest)))
+                                          (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
+                                          (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
+                      (if (and (> bottomA (- topB 3)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
+                          #t
+                          (loop (cdr rest)))))))))
 
 
 (define collision-down-tiles-enemy
@@ -906,7 +907,7 @@ end-of-shader
                       
 
                       ;;Add all enemies of the world to buffer
-                      ;; (let add-all-enemies-of-world ((rest (world-enemies world)))
+                      ;; (let move-all-enemies-of-world ((rest (world-enemies world)))
                       ;;   (when (not (null? rest))
                       ;;         (case (enemy-type (car rest))
                       ;;           ((kamikaze)
@@ -916,7 +917,9 @@ end-of-shader
                       ;;                      (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
                       ;;                      (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
                       ;;                  (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                      ;;                (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
+                      ;;                (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time))))
+                      ;;            ;(set-enemies (world-enemies world) (world-camera world));
+                      ;;            )
                       ;;           ((defender)
                       ;;            (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
                       ;;                (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
@@ -927,13 +930,33 @@ end-of-shader
                       ;;            (if (eq? (enemy-direction (car rest)) 'right)
                       ;;                (enemy-posx-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time)))
                       ;;                (if (eq? (enemy-direction (car rest)) 'left)
-                      ;;                    (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))))
-                      ;;         (add-element-to-vector!
-                      ;;          (exact->inexact (- (enemy-posx (car rest)) (camera-position (world-camera world))))
-                      ;;          (exact->inexact (enemy-posy (car rest)))
-                      ;;          (enemy-width (car rest))
-                      ;;          (enemy-height (car rest)))
-                      ;;         (add-all-enemies-of-world (cdr rest))))
+                      ;;                    (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
+
+                      ;;                   ;(set-enemies (world-enemies world) (world-camera world))
+                      ;;            ))
+                      ;;         ;(set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1))
+                      ;;         (move-all-enemies-of-world (cdr rest))))
+
+
+                      (let process-all-enemies ((rest (world-enemies world)))
+                        (when (not (null? rest))
+                              (when 
+                               (and 
+                                (< (abs 
+                                    (- (enemy-posx (car rest)) (player-posx (world-player world)))) 1280) 
+                                (< (player-posx (world-player world)) (+ (enemy-posx (car rest)) 500)))
+                                  (case (enemy-type (car rest))
+                                    ((kamikaze)
+                                     (when (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                                           (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                                     (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
+                                     (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
+                              
+                              
+                              (process-all-enemies (cdr rest))))
+
+                      
+                      
                       
                       
                       ;;Add player to buffer
