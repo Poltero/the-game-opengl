@@ -15,9 +15,9 @@
 ;Map level
 (define world-map '#(#(0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 *+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
                          #(0 0 0 0 *+ 0 0 0 0 0 0 1 0 0 + 0 0 0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 ++ 0 0 0 0 |--| 0 0 0 0 0 * 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(0 0 0 |--| 0 0 0 0 +++ 0 0 + 0 0 0 0 0 0 + i i i 0 0 * 0 0 * 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 0 *+ 0 0 0 * 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(+ 0 1 0 0 0 0 0 0 0 0 * i i i 0 * * 0 i 0 0 0 0 0 0 +++ 1 1 + 1 i 0 0 0 0 0 0 0 0 0 0 0 0 |--| 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * * * * * 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(+++ + 1 1 0 1 1 ++ ++ + 0 0 + 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 ++ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1)
+                         #(0 0 0 |--| 0 0 0 0 +++ 0 0 + 0 0 0 0 0 0 + i i i 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 0 *+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                         #(+ 0 1 0 0 0 0 0 0 0 0 * i i i 0 * * 0 i 0 0 0 * * 0 +++ 1 1 + 1 i 0 0 0 0 0 0 0 0 0 0 0 * |--| 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * * * * * 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+                         #(+++ + 1 1 1 1 1 ++ ++ + 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ++ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1)
                          ))
 
 
@@ -245,7 +245,7 @@
                                           (topB (tile-posy (car rest)))
                                           (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
                                           (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
-                      (if (and (> bottomA (- topB 3)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
+                      (if (and (> bottomA (- topB 1)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
                           #t
                           (loop (cdr rest)))))))))
 
@@ -287,17 +287,19 @@
   (lambda (player enemies)
     (let loop ((rest enemies))
       (unless (null? rest)
-              (let ckeck-collision (
-                                    (rightA (+ (player-posx player) (player-width player)))
-                                    (topA (player-posy player))
-                                    (bottomA (+ (player-posy player) (player-height player)))
-                                    (leftB (enemy-posx (car rest)))
-                                    (leftA (player-posx player))
-                                    (topB (enemy-posy (car rest)))
-                                    (bottomB (+ (enemy-posy (car rest)) (enemy-height (car rest)))))
-                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (>= rightA (- leftB 13)) (<= leftA leftB))
-                    #t
-                    (loop (cdr rest))))))))
+              (if (< (abs (- (enemy-posx (car rest)) (player-posx player))) 200)
+                  (let ckeck-collision (
+                                        (rightA (+ (player-posx player) (player-width player)))
+                                        (topA (player-posy player))
+                                        (bottomA (+ (player-posy player) (player-height player)))
+                                        (leftB (enemy-posx (car rest)))
+                                        (leftA (player-posx player))
+                                        (topB (enemy-posy (car rest)))
+                                        (bottomB (+ (enemy-posy (car rest)) (enemy-height (car rest)))))
+                    (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (>= rightA (- leftB 1)) (<= leftA leftB))
+                        #t
+                        (loop (cdr rest))))
+                  (loop (cdr rest)))))))
 
 
 ;;Collision tiles left of enemy
@@ -344,18 +346,20 @@
   (lambda (player enemies)
     (let loop ((rest enemies))
       (unless (null? rest)
-              (let ckeck-collision (
-                                    (rightA (+ (player-posx player) (player-width player)))
-                                    (topA (player-posy player))
-                                    (bottomA (+ (player-posy player) (player-height player)))
-                                    (leftB (enemy-posx (car rest)))
-                                    (rightB (+ (enemy-posx (car rest)) (enemy-width (car rest))))
-                                    (leftA (player-posx player))
-                                    (topB (enemy-posy (car rest)))
-                                    (bottomB (+ (enemy-posy (car rest)) (enemy-height (car rest)))))
-                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
-                    #t
-                    (loop (cdr rest))))))))
+              (if (< (abs (- (enemy-posx (car rest)) (player-posx player))) 200)
+                  (let ckeck-collision (
+                                        (rightA (+ (player-posx player) (player-width player)))
+                                        (topA (player-posy player))
+                                        (bottomA (+ (player-posy player) (player-height player)))
+                                        (leftB (enemy-posx (car rest)))
+                                        (rightB (+ (enemy-posx (car rest)) (enemy-width (car rest))))
+                                        (leftA (player-posx player))
+                                        (topB (enemy-posy (car rest)))
+                                        (bottomB (+ (enemy-posy (car rest)) (enemy-height (car rest)))))
+                    (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 1)) (>= leftA leftB))
+                        #t
+                        (loop (cdr rest))))
+                  (loop (cdr rest)))))))
 
 ;;Collision tiles right of enemy
 (define check-collision-right-tiles-enemy
@@ -396,7 +400,7 @@
     (if (< count-y 5)
         (begin
           (let create-plataforms ((element (vector-ref (vector-ref rest-map count-y) count-x)))
-            (if (or (eq? element 1) (eq? element '+) (eq? element '*))
+            (if (or (eq? element 1) (eq? element '+) (eq? element '-))
                 (let create-plataform-normal ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                   (if (< number 4)
                       (begin
@@ -471,7 +475,7 @@
           (case (vector-ref (vector-ref rest-map count-y) count-x)
             ((*)
              (let create-enemy-kamikaze ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
-               (set! rest (cons (make-enemy (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) 99)) 60.0 40.0 10 'kamikaze 'none) rest))))
+               (set! rest (cons (make-enemy (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) 99)) 30.0 30.0 10 'kamikaze 'none) rest))))
             ((*+)
              (let create-enemy-defender ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                (set! rest (cons (make-enemy (exact->inexact (+ posx 50)) (exact->inexact (* (+ 0.7 count-y) 99)) 40.0 40.0 10 'defender 'left) rest)))))
@@ -945,12 +949,14 @@ end-of-shader
                                 (< (abs 
                                     (- (enemy-posx (car rest)) (player-posx (world-player world)))) 1280) 
                                 (< (player-posx (world-player world)) (+ (enemy-posx (car rest)) 500)))
-                                  (case (enemy-type (car rest))
-                                    ((kamikaze)
-                                     (when (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
-                                           (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                                     (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
-                                     (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
+                               ;(pp "position: ")
+                               ;(pp (enemy-direction (car rest)))
+                               (case (enemy-type (car rest))
+                                 ((kamikaze)
+                                  (when (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                                        (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                                  (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
+                                  (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
                               
                               
                               (process-all-enemies (cdr rest))))
@@ -970,21 +976,30 @@ end-of-shader
 
                       
                       ;; ;;Kill enemies
-                      ;; (let loop ((rest (world-enemies world)))
-                      ;;   (unless (null? rest)
-                      ;;           (if (not (eq? (enemy-type (car rest)) 'defender))
-                      ;;               (if (check-collision-bottom-player-with-enemy (world-player world) (car rest))
-                      ;;                   (begin
-                      ;;                     (enemy-posx-set! (car rest) -20.0)
-                      ;;                     (loop (cdr rest)))
-                      ;;                   (loop (cdr rest))))))
+                      (let loop ((rest (world-enemies world)) (count (+ (length (world-tiles world)) 1)))
+                        (unless (null? rest)
+                                (if  (< (abs (- (enemy-posx (car rest)) (player-posx (world-player world)))) 500)
+                                     (begin 
+                                       (if (check-collision-bottom-player-with-enemy (world-player world) (car rest))
+                                           (begin
+                                             (enemy-posx-set! (car rest) -20.0)
+                                             (set-element-in-vector!
+                                              count
+                                              (create-f32vector! 
+                                               0.0
+                                               0.0
+                                               0.0
+                                               0.0))
+                                             (loop (cdr rest) (+ count 1)))
+                                           (loop (cdr rest) (+ count 1)))))
+                                (loop (cdr rest) (+ count 1))))
 
                       
 
                       ;;You lost
-                      ;; (when (or (check-collision-left-enemies (world-player world) (world-enemies world)) (check-collision-right-enemies (world-player world) (world-enemies world)))
-                      ;;       (world-gamestates-set! world 'lose)
-                      ;;       (set! vertex-data-vector '#f32()))
+                      (when (or (check-collision-left-enemies (world-player world) (world-enemies world)) (check-collision-right-enemies (world-player world) (world-enemies world)))
+                            (world-gamestates-set! world 'lose)
+                            (set! vertex-data-vector '#f32()))
 
                       (when (< (- (player-posx (world-player world)) (camera-position (world-camera world))) (* -1 (player-width (world-player world))))
                           (world-gamestates-set! world 'lose)
