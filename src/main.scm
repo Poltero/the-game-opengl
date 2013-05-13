@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
-
+;eoo
 ;Vars of control time
 (define delta-time 0)
 (define last-time 0)
