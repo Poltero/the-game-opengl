@@ -552,7 +552,7 @@ end-of-shader
             (ctx (SDL_GL_CreateContext win)))
         (SDL_Log (string-append "SDL screen size: " (object->string screen-width) " x " (object->string screen-height)))
         ;; OpenGL
-        (SDL_Log (string-append "OpenGL Version: " (unsigned-char*->string (glGetString GL_VERSION))))
+        (SDL_Log (string-append "OpenGL Version: " (*->string (glGetString GL_VERSION))))
         (SDL_Log "Using API OpenGL Version: 2.1 - GL Shading Language Version: 1.2")
         ;; Glew: initialize extensions
         (glewInit)
@@ -585,16 +585,16 @@ end-of-shader
                (shaders (list (fusion:create-shader GL_VERTEX_SHADER vertex-shader)
                               (fusion:create-shader GL_FRAGMENT_SHADER fragment-shader)))
                (shader-program (fusion:create-program shaders))
-               (texture-image* (SDL_LoadBMP "assets/128x128.bmp")))
+               (texture-image* (IMG_Load "assets/128x128.png")))
           ;; Clean up shaders once the program has been compiled and linked
           (for-each glDeleteShader shaders)
 
           ;; Texture
           (glGenTextures 1 texture-id*)
           (glBindTexture GL_TEXTURE_2D (*->GLuint texture-id*))
-          (glTexImage2D GL_TEXTURE_2D 0 3
+          (glTexImage2D GL_TEXTURE_2D 0 GL_RGB
                         (SDL_Surface-w texture-image*) (SDL_Surface-h texture-image*)
-                        0 GL_BGR GL_UNSIGNED_BYTE
+                        0 GL_RGB GL_UNSIGNED_BYTE
                         (SDL_Surface-pixels texture-image*))
           (glTexParameteri GL_TEXTURE_2D GL_TEXTURE_BASE_LEVEL 0)
           (glTexParameteri GL_TEXTURE_2D GL_TEXTURE_MAX_LEVEL 0)
@@ -651,7 +651,7 @@ end-of-shader
             (pp (vector-length (vector-ref world-map 0)))
             
             ;; Game loop
-            (let ((event* (alloc-SDL_Event 1)))
+            (let ((event* (alloc-SDL_Event)))
               (call/cc
                (lambda (quit)
                  (let main-loop ((world (make-world 'splashscreen '() 'none (make-player 0.0 0.0 0.0 0.0 'none 'none 0) '() '())) (time (SDL_GetTicks)))
@@ -969,9 +969,13 @@ end-of-shader
                                ;(pp (enemy-direction (car rest)))
                                (case (enemy-type (car rest))
                                  ((kamikaze)
-                                  (when (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
-                                        (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                                  (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
+                                  (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                                      (begin (if (not (check-collision-right-tiles-enemy (car rest) (world-tiles world)))
+                                                 (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
+                                                 (enemy-posy-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time))))
+                                             (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                                      (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time))))
+                                  
                                   (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
                               
                               
@@ -1064,7 +1068,7 @@ end-of-shader
                       
                       (SDL_GL_SwapWindow win)))
           (main-loop world (SDL_GetTicks)))
-                 (free event*)))
+                 ))
               (SDL_LogInfo SDL_LOG_CATEGORY_APPLICATION "Bye.")
               (SDL_GL_DeleteContext ctx)
               (SDL_DestroyWindow win)
