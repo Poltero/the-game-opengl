@@ -305,7 +305,7 @@
                                     (leftA (player-posx player))
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
-                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
+                (if (and  (>= bottomA (+ topB 0)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
                     #t
                     (loop (cdr rest))))))))
 
@@ -888,19 +888,18 @@ end-of-shader
 
                       (if (eq? (player-hstate (world-player world)) 'jump) 
                           (if (not (check-collision-top (world-player world) (world-tiles world)))
-                              (begin 
-                                (if (= position-y-origin (player-posy (world-player world)))
-                                    (set! position-y-origin (- (player-posy (world-player world)) -50)))
+                              (begin      
                                 (let player-up ((player (world-player world)))
                                   (player-posy-set! player (- (player-posy player) (* 0.3 delta-time)))
                                   (set-player! (world-player world) (world-camera world) 0)))
                               (player-hstate-set! (world-player world) 'down)))
 
 
-                      (if (and (eq? (player-hstate (world-player world)) 'down) (not (check-collision-bottom (world-player world) (world-tiles world))))
-                          (let player-down ((player (world-player world)))
-                            (player-posy-set! player (+ (player-posy player) (* 0.3 delta-time)))
-                            (set-player! (world-player world) (world-camera world) 0)))
+                      (if (eq? (player-hstate (world-player world)) 'down) 
+                          (if (not (check-collision-bottom (world-player world) (world-tiles world)))
+                              (let player-down ((player (world-player world)))
+                                (player-posy-set! player (+ (player-posy player) (* 0.3 delta-time)))
+                                (set-player! (world-player world) (world-camera world) 0))))
 
                       
                       ;Control limits jump
