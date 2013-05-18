@@ -285,6 +285,23 @@
                     #t
                     (loop (cdr rest))))))))
 
+(define check-collision-right-tiles
+  (lambda (player tiles)
+    (let loop ((rest tiles))
+      (unless (null? rest)
+              (let ckeck-collision (
+                                    (rightA (+ (player-posx player) (player-width player)))
+                                    (topA (player-posy player))
+                                    (bottomA (+ (player-posy player) (player-height player)))
+                                    (leftB (tile-posx (car rest)))
+                                    (rightB (+ (tile-posx (car rest)) (tile-width (car rest))))
+                                    (leftA (player-posx player))
+                                    (topB (tile-posy (car rest)))
+                                    (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
+                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
+                    #t
+                    (loop (cdr rest))))))))
+
 ;;Collsion tiles left of enemy
 
 (define check-collision-left-enemies
@@ -324,25 +341,6 @@
                     (loop (cdr rest))))))))
 
 
-
-;;Collsion tiles right of player
-
-(define check-collision-right-tiles
-  (lambda (player tiles)
-    (let loop ((rest tiles))
-      (unless (null? rest)
-              (let ckeck-collision (
-                                    (rightA (+ (player-posx player) (player-width player)))
-                                    (topA (player-posy player))
-                                    (bottomA (+ (player-posy player) (player-height player)))
-                                    (leftB (tile-posx (car rest)))
-                                    (rightB (+ (tile-posx (car rest)) (tile-width (car rest))))
-                                    (leftA (player-posx player))
-                                    (topB (tile-posy (car rest)))
-                                    (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
-                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
-                    #t
-                    (loop (cdr rest))))))))
 
 
 ;;Collsion tiles right of enemy
@@ -719,7 +717,7 @@ end-of-shader
                                                          'gamescreen
                                                          (create-tiles-map (world-tiles world))
                                                          (make-camera 0.0 'on 0.1)
-                                                         (make-player 400.0 450.0 30.0 30.0 'none 'down 0)
+                                                         (make-player 400.0 430.0 30.0 30.0 'none 'down 0)
                                                          (create-coins-map (world-coins world))
                                                          (create-enemies-map (world-enemies world))))
                                             
@@ -734,8 +732,8 @@ end-of-shader
                                               (pp size)
                                               (set! vertex-data-vector (make-f32vector size 0.0)))
 
-                                            (pp "Final level: ")
-                                            (pp level-final)
+                                            ;(pp "Final level: ")
+                                            ;(pp level-final)
 
                                             
 
