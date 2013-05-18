@@ -1,12 +1,19 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
 
+(define level-number 1)
 
 (define game-contents
   (call-with-input-file "LevelData.dat" (lambda (port) (read-all port))))
 
-(define level-contents
-  (cdr (assq 1 game-contents)))
+(define level-contents 'nothing)
+
+(define set-level-contents! 
+  (lambda (level)
+    (set! level-contents (cdr (assq level game-contents)))))
+
+
+(define logic-states 'none)
 
 ;Vars of control time
 (define delta-time 0)
@@ -712,54 +719,7 @@ end-of-shader
                                        
                                        ((= key SDLK_RETURN)
                                         (when (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
-                                              (set! max-count-x (- (vector-length (vector-ref (cdr (assq 'map level-contents)) 0)) 1))
-                                              (set! world (make-world 
-                                                         'gamescreen
-                                                         (create-tiles-map (world-tiles world))
-                                                         (make-camera 0.0 'on 0.1)
-                                                         (make-player 400.0 430.0 30.0 30.0 'none 'down 0)
-                                                         (create-coins-map (world-coins world))
-                                                         (create-enemies-map (world-enemies world))))
-                                            
-                                            (let create-vertex-data-vector ((size (* 
-                                                                                   (+ (length (world-tiles world))
-                                                                                      (length (world-coins world))
-                                                                                      (length (world-enemies world))
-                                                                                      2)
-                                                                                   17)))
-                                              (if (odd? (/ size 2))
-                                                  (set! size (+ size 2)))
-                                              (pp size)
-                                              (set! vertex-data-vector (make-f32vector size 0.0)))
-
-                                            ;(pp "Final level: ")
-                                            ;(pp level-final)
-
-                                            
-
-                                            ;(pp (+ (length (world-tiles world)) 1 (length (world-enemies world)) (length (world-coins world))))
-                                            ;(pp (f32vector-length vertex-data-vector))
-                                            
-                                            (let init-vector-with-all-elements! ((count 0) 
-                                                                                             (player (world-player world)) 
-                                                                                             (tiles (world-tiles world)) 
-                                                                                             (enemies (world-enemies world)) 
-                                                                                             (coins (world-coins world)))
-                                              
-                                              (set-element-in-vector! 
-                                               count 
-                                               (create-f32vector!
-                                                (- (player-posx player) (camera-position (world-camera world)))
-                                                (player-posy player) 
-                                                (player-width player) 
-                                                (player-height player)))
-                                              
-                                              (set-tiles! 
-                                               tiles (world-camera world) 1)
-                                              (set-enemies! 
-                                               enemies (world-camera world) (+ (length tiles) 1))
-                                              (set-coins! 
-                                               coins (world-camera world) (+ (length tiles) (length enemies) 1)))))
+                                             (set! logic-states 'start)))
                                        
                                        
                                        (else
@@ -819,8 +779,73 @@ end-of-shader
                            (event-loop)))
                    
                    ;(set! vertex-data-vector '#f32())
+
+                   (when (eq? logic-states 'start)
+                         (set-level-contents! level-number)
+                         (set! max-count-x (- (vector-length (vector-ref (cdr (assq 'map level-contents)) 0)) 1))
+                         
+                         (set! world (make-world 
+                                      'gamescreen
+                                      (create-tiles-map (world-tiles world))
+                                      (make-camera 0.0 'on 0.1)
+                                      (make-player 400.0 430.0 30.0 30.0 'none 'down 0)
+                                      (create-coins-map (world-coins world))
+                                      (create-enemies-map (world-enemies world))))
+                         
+                         (let create-vertex-data-vector ((size (* 
+                                                                (+ (length (world-tiles world))
+                                                                   (length (world-coins world))
+                                                                   (length (world-enemies world))
+                                                                   2)
+                                                                17)))
+                           (if (odd? (/ size 2))
+                               (set! size (+ size 2)))
+                           (pp size)
+                           (set! vertex-data-vector (make-f32vector size 0.0)))
+                         
+                                        ;(pp "Final level: ")
+                                        ;(pp level-final)
+                         
+                         
+                         
+                                        ;(pp (+ (length (world-tiles world)) 1 (length (world-enemies world)) (length (world-coins world))))
+                                        ;(pp (f32vector-length vertex-data-vector))
+                         
+                         (let init-vector-with-all-elements! ((count 0) 
+                                                              (player (world-player world)) 
+                                                              (tiles (world-tiles world)) 
+                                                              (enemies (world-enemies world)) 
+                                                              (coins (world-coins world)))
+                           
+                           (set-element-in-vector! 
+                            count 
+                            (create-f32vector!
+                             (- (player-posx player) (camera-position (world-camera world)))
+                             (player-posy player) 
+                             (player-width player) 
+                             (player-height player)))
+                           
+                           (set-tiles! 
+                            tiles (world-camera world) 1)
+                           (set-enemies! 
+                            enemies (world-camera world) (+ (length tiles) 1))
+                           (set-coins! 
+                            coins (world-camera world) (+ (length tiles) (length enemies) 1)))
+                         
+                         (set! logic-states 'none))
                    
                    (case (world-gamestates world)
+                     ((win)
+                      ;;Reset list of world
+                      (world-tiles-set! world '())
+                      (world-enemies-set! world '())
+                      (world-coins-set! world '())
+                      
+                      (set! level-number (+ level-number 1))
+                      (set! vertex-data-vector '#f32())
+                      (set! logic-states 'start))
+
+                     
                      ((lose)
                       ;;Reset list of the world
                       (world-tiles-set! world '())
