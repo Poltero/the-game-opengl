@@ -1,6 +1,13 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
 
+
+(define game-contents
+  (call-with-input-file "LevelData.dat" (lambda (port) (read-all port))))
+
+(define level-contents
+  (cdr (assq 1 game-contents)))
+
 ;Vars of control time
 (define delta-time 0)
 (define last-time 0)
@@ -14,13 +21,6 @@
 ;Global position origin y
 (define position-y-origin 0)
 
-;Map level
-(define world-map '#(#(0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 *+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(0 0 0 0 *+ 0 0 0 0 0 0 1 0 0 + 0 0 0 0 0 0 0 0 ++ 0 0 0 0 0 0 0 ++ 0 0 0 0 |--| 0 0 0 0 0 * 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(0 0 0 |--| 0 0 0 0 +++ 0 0 + 0 0 0 0 0 0 + i i i 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 0 *+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(+ 0 1 0 0 0 0 0 0 0 0 * i i i 0 * * 0 i 0 0 0 * * 0 +++ 1 1 + 1 i 0 0 0 0 0 0 0 0 0 0 0 * |--| 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * * * * * 0 0 0 * 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-                         #(+++ + 1 1 1 1 1 ++ ++ + 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ++ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 + 1 1 1 1 1 1 1 1 1 1 1 1 final)
-                         ))
 
 
 (define-structure tile posx posy width height)
@@ -400,7 +400,7 @@
 ;; Logic for generations maps
 
 (define (create-tiles-map l)
-  (let loop ((rest-map world-map) (rest l) (count-x 0) (count-y 0))
+  (let loop ((rest-map (cdr (assq 'map level-contents))) (rest l) (count-x 0) (count-y 0))
     (if (< count-y 5)
         (begin
           (let create-plataforms ((element (vector-ref (vector-ref rest-map count-y) count-x)))
@@ -441,7 +441,7 @@
         rest)))
 
 (define (create-coins-map l)
-  (let loop ((rest-map world-map) (rest l) (count-x 0) (count-y 0))
+  (let loop ((rest-map (cdr (assq 'map level-contents))) (rest l) (count-x 0) (count-y 0))
     (if (< count-y 5)
         (begin
           (case (vector-ref (vector-ref rest-map count-y) count-x)
@@ -476,7 +476,7 @@
         rest)))
 
 (define (create-enemies-map l)
-  (let loop ((rest-map world-map) (rest l) (count-x 0) (count-y 0))
+  (let loop ((rest-map (cdr (assq 'map level-contents))) (rest l) (count-x 0) (count-y 0))
     (if (< count-y 5)
         (begin
           (case (vector-ref (vector-ref rest-map count-y) count-x)
@@ -648,7 +648,7 @@ end-of-shader
             (glBindVertexArray 0)
 
             
-            (pp (vector-length (vector-ref world-map 0)))
+            ;;(pp (vector-length (vector-ref world-map 0)))
             
             ;; Game loop
             (let ((event* (alloc-SDL_Event)))
@@ -714,7 +714,7 @@ end-of-shader
                                        
                                        ((= key SDLK_RETURN)
                                         (when (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
-                                              (set! max-count-x (- (vector-length (vector-ref world-map 0)) 1))
+                                              (set! max-count-x (- (vector-length (vector-ref (cdr (assq 'map level-contents)) 0)) 1))
                                               (set! world (make-world 
                                                          'gamescreen
                                                          (create-tiles-map (world-tiles world))
