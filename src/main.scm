@@ -800,16 +800,12 @@ end-of-shader
                                       (create-coins-map (world-coins world))
                                       (create-enemies-map (world-enemies world))))
                          
-                         (let create-vertex-data-vector ((size (* 
-                                                                (+ (length (world-tiles world))
-                                                                   (length (world-coins world))
-                                                                   (length (world-enemies world))
-                                                                   2)
-                                                                17)))
-                           (if (odd? (/ size 2))
-                               (set! size (+ size 2)))
-                           (pp size)
-                           (set! vertex-data-vector (make-f32vector size 0.0)))
+                         (set! vertex-data-vector (make-f32vector (* (+ (length (world-tiles world))
+                                                                        (length (world-coins world))
+                                                                        (length (world-enemies world))
+                                                                        1)
+                                                                     16)
+                                                                  0.0))
                          
                                         ;(pp "Final level: ")
                                         ;(pp level-final)
@@ -819,11 +815,12 @@ end-of-shader
                                         ;(pp (+ (length (world-tiles world)) 1 (length (world-enemies world)) (length (world-coins world))))
                                         ;(pp (f32vector-length vertex-data-vector))
                          
-                         (let init-vector-with-all-elements! ((count 0) 
-                                                              (player (world-player world)) 
-                                                              (tiles (world-tiles world)) 
-                                                              (enemies (world-enemies world)) 
-                                                              (coins (world-coins world)))
+                         ;;Inicializar todos los datos del vector
+                         (let* ((count 0) 
+                                (player (world-player world)) 
+                                (tiles (world-tiles world)) 
+                                (enemies (world-enemies world)) 
+                                (coins (world-coins world)))
                            
                            (set-element-in-vector! 
                             count 
