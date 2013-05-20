@@ -45,15 +45,6 @@
 (define max-count-x 0)
 
 
-
-(define add-element-to-vector!
-  (lambda (x y width height)
-    (set! vertex-data-vector
-          (f32vector-append vertex-data-vector
-                            (f32vector x y 0.5 0.5
-                                       (+ x width) y 0.5 0.5
-                                       (+ x width) (+ y height) 1.0 0.5
-                                       x (+ y height) 0.5 0.5)))))
 (define create-f32vector!
   (lambda (x y width height px py)
     (let ((vector 
@@ -786,16 +777,18 @@ end-of-shader
                               (else #f)))
                            (event-loop)))
                    
-                   ;(set! vertex-data-vector '#f32())
+                   
 
                    (when (eq? logic-states 'start)
                          (set-level-contents! level-number)
                          (set! max-count-x (- (vector-length (vector-ref (cdr (assq 'map level-contents)) 0)) 1))
+
+                         (pp (cdr (assq 'camera level-contents)))
                          
                          (set! world (make-world 
                                       'gamescreen
                                       (create-tiles-map (world-tiles world))
-                                      (make-camera 0.0 'on 0.1)
+                                      (make-camera 0.0 (cdr (assq 'camera level-contents)) 0.1)
                                       (make-player 400.0 430.0 30.0 30.0 'none 'down 0)
                                       (create-coins-map (world-coins world))
                                       (create-enemies-map (world-enemies world))))
