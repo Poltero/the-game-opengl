@@ -50,17 +50,17 @@
   (lambda (x y width height)
     (set! vertex-data-vector
           (f32vector-append vertex-data-vector
-                            (f32vector x y 0.0 0.0
-                                       (+ x width) y 1.0 0.0
-                                       (+ x width) (+ y height) 1.0 1.0
-                                       x (+ y height) 0.0 1.0)))))
+                            (f32vector x y 0.5 0.5
+                                       (+ x width) y 0.5 0.5
+                                       (+ x width) (+ y height) 1.0 0.5
+                                       x (+ y height) 0.5 0.5)))))
 (define create-f32vector!
-  (lambda (x y width height)
+  (lambda (x y width height px py)
     (let ((vector 
-           (f32vector x y 0.0 0.0
-                      (+ x width) y 1.0 0.0
-                      (+ x width) (+ y height) 1.0 1.0
-                      x (+ y height) 0.0 1.0)))
+           (f32vector x y px py
+                      (+ x width) y px py
+                      (+ x width) (+ y height) px py
+                      x (+ y height) px py)))
       vector)))
 
 
@@ -80,7 +80,9 @@
       (exact->inexact (- (player-posx player) (camera-position camera)))
       (exact->inexact (player-posy player))
       (player-width player)
-      (player-height player)))))
+      (player-height player)
+      1.0
+      0.5))))
 
 (define set-tiles! 
   (lambda (tiles camera start)
@@ -92,7 +94,9 @@
               (exact->inexact (- (tile-posx (car rest)) (camera-position camera)))
               (exact->inexact (tile-posy (car rest)))
               (tile-width (car rest))
-              (tile-height (car rest))))
+              (tile-height (car rest))
+              1.0
+              1.0))
             (set-tiles-in-vector! (cdr rest) (+ count 1))))))
 
 (define set-enemies! 
@@ -105,7 +109,9 @@
               (exact->inexact (- (enemy-posx (car rest)) (camera-position camera)))
               (exact->inexact (enemy-posy (car rest)))
               (enemy-width (car rest))
-              (enemy-height (car rest))))
+              (enemy-height (car rest))
+              0.5
+              0.5))
             (set-enemies-in-vector! (cdr rest) (+ count 1))))))
 
 (define set-coins! 
@@ -118,7 +124,9 @@
               (exact->inexact (- (coin-posx (car rest)) (camera-position camera)))
               (exact->inexact (coin-posy (car rest)))
               (coin-width (car rest))
-              (coin-height (car rest))))
+              (coin-height (car rest))
+              0.5
+              1.0))
             (set-coins-in-vector! (cdr rest) (+ count 1))))))
 
 
@@ -823,7 +831,9 @@ end-of-shader
                              (- (player-posx player) (camera-position (world-camera world)))
                              (player-posy player) 
                              (player-width player) 
-                             (player-height player)))
+                             (player-height player)
+                             1.0
+                             0.5))
                            
                            (set-tiles! 
                             tiles (world-camera world) 1)
@@ -1006,6 +1016,8 @@ end-of-shader
                                              (set-element-in-vector!
                                               count
                                               (create-f32vector! 
+                                               0.0
+                                               0.0
                                                0.0
                                                0.0
                                                0.0
