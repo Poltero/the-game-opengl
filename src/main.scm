@@ -232,7 +232,7 @@
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
                                     (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
-                (if (and (<= topA (+ bottomB 3)) (> topA topB) (>= rightA leftB) (<= leftA rightB))
+                (if (and (<= topA (+ bottomB 10)) (> topA topB) (>= rightA leftB) (<= leftA rightB))
                     #t
                     (loop (cdr rest))))))))
 
@@ -857,6 +857,8 @@ end-of-shader
 
                       ;;Logic Events
                       
+
+
                       ;;Move player to left
                       (let* ((player (world-player world)) (tiles (world-tiles world)) (camera (world-camera world)))
                         (if (eq? (player-vstate (world-player world)) 'left)
@@ -1015,7 +1017,7 @@ end-of-shader
 
                       
 
-                      ;;You lost
+                      ;;Player lost
                       (when (or (check-collision-left-enemies (world-player world) (world-enemies world)) (check-collision-right-enemies (world-player world) (world-enemies world)))
                             (world-gamestates-set! world 'lose)
                             (set! vertex-data-vector '#f32()))
