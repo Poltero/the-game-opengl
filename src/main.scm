@@ -216,7 +216,7 @@
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
                                     (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
                 (if (and (>= bottomA (- topB 6)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
-                    topB
+                    (player-posy-set! player (- topB 31))
                     (loop (cdr rest))))))))
 
 (define check-collision-top
@@ -232,7 +232,7 @@
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
                                     (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
-                (if (and (<= topA (+ bottomB 8)) (> topA topB) (>= rightA leftB) (<= leftA rightB))
+                (if (and (<= topA (+ bottomB 3)) (> topA topB) (>= rightA leftB) (<= leftA rightB))
                     #t
                     (loop (cdr rest))))))))
 
@@ -297,7 +297,7 @@
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
                 (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (>= rightA (- leftB 13)) (<= leftA leftB))
-                    leftB
+                    (player-posx-set! player (- leftB 31))
                     (loop (cdr rest))))))))
 
 (define check-collision-right-tiles
@@ -314,7 +314,7 @@
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
                 (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
-                    rightB
+                    (player-posx-set! player (+ rightB 1))
                     (loop (cdr rest))))))))
 
 ;;Collsion tiles left of enemy
@@ -805,15 +805,8 @@ end-of-shader
                                                                         (length (world-enemies world))
                                                                         1)
                                                                      16)
-                                                                  0.0))
-                         
-                                        ;(pp "Final level: ")
-                                        ;(pp level-final)
-                         
-                         
-                         
-                                        ;(pp (+ (length (world-tiles world)) 1 (length (world-enemies world)) (length (world-coins world))))
-                                        ;(pp (f32vector-length vertex-data-vector))
+                                                                 0.0))
+                        
                          
                          ;;Inicializar todos los datos del vector
                          (let* ((count 0) 
@@ -863,36 +856,15 @@ end-of-shader
                       
 
                       ;;Logic Events
-
-                      (if (eq? (player-vstate (world-player world)) 'left)
-                          (let ((result-collision (check-collision-right-tiles (world-player world) (world-tiles world))) (player (world-player world)))
-                            (if (not result-collision)
-                                (let move-left ((camera (world-camera world)) (tiles (world-tiles world)))
-                                  (begin
-                                    (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
-                                    (if (eq? (camera-state camera) 'on)
-                                        (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time)))))
-                                  
-                                  
-                                  (set-player! 
-                                   player camera 0)
-                                  (set-tiles!
-                                   tiles camera 1)
-                                  (set-coins!
-                                   (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
-                                (begin
-                                  (player-posx-set! player (+ result-collision 1))
-                                  (set-player! 
-                                   player (world-camera world) 0)))))
                       
-                      (if (eq? (player-vstate (world-player world)) 'right)
-                          (let ((result-collision (check-collision-left-tiles (world-player world) (world-tiles world))) (player (world-player world)))
-                            (if (not result-collision)
-                                (let move-right ((camera (world-camera world)) (tiles (world-tiles world)))
-                                  (begin
-                                    (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
-                                    (if (eq? (camera-state camera) 'on)
-                                        (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))
+                      ;;Move player to left
+                      (let* ((player (world-player world)) (tiles (world-tiles world)) (camera (world-camera world)))
+                        (if (eq? (player-vstate (world-player world)) 'left)
+                            (if (not (check-collision-right-tiles player tiles))
+                                (begin
+                                  (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
+                                  (if (eq? (camera-state camera) 'on)
+                                      (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time))))
                                   
                                   
                                   (set-player! 
@@ -901,35 +873,56 @@ end-of-shader
                                    tiles camera 1)
                                   (set-coins!
                                    (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
-                                (begin
-                                  (player-posx-set! player (- result-collision 31))
-                                  (set-player! 
-                                   player (world-camera world) 0)))))
+                                (set-player! 
+                                 player (world-camera world) 0))))
+                      
 
+                      ;;Move player to right
+                      (let* ((player (world-player world)) (tiles (world-tiles world)) (camera (world-camera world)))
+                        (if (eq? (player-vstate player) 'right)
+                            (if (not (check-collision-left-tiles player tiles))
+                                (begin
+                                  (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
+                                  (if (eq? (camera-state camera) 'on)
+                                      (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time))))
+                                  
+                                  
+                                  (set-player! 
+                                   player camera 0)
+                                  (set-tiles!
+                                   tiles camera 1)
+                                  (set-coins!
+                                   (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
+                                (set-player! 
+                                 player (world-camera world) 0))))
+                      
+
+                      ;;Manage states up's
                       (if (eq? (player-hstate (world-player world)) 'up) 
                           (if (check-collision-bottom (world-player world) (world-tiles world))
                               (player-hstate-set! (world-player world) 'jump)
                               (player-hstate-set! (world-player world) 'down)))
 
-
-                      (if (eq? (player-hstate (world-player world)) 'jump) 
-                          (if (not (check-collision-top (world-player world) (world-tiles world)))      
-                              (let move-up ((player (world-player world)))
-                                (player-posy-set! player (- (player-posy player) (* 0.3 delta-time)))
-                                (set-player! (world-player world) (world-camera world) 0))
-                              (player-hstate-set! (world-player world) 'down)))
-
-
-                      (if (eq? (player-hstate (world-player world)) 'down) 
-                          (let ((result-collision (check-collision-bottom (world-player world) (world-tiles world))) (player (world-player world)))
-                            (if (not result-collision)
-                                (let move-down ()
-                                  (player-posy-set! player (+ (player-posy player) (* 0.3 delta-time)))
+                      ;;Move player to up
+                      (let* ((player (world-player world)))
+                        (if (eq? (player-hstate player) 'jump) 
+                            (if (not (check-collision-top (world-player world) (world-tiles world)))      
+                                (begin
+                                  (player-posy-set! player (- (player-posy player) (* 0.3 delta-time)))
                                   (set-player! (world-player world) (world-camera world) 0))
-                                (begin (player-posy-set! player (- result-collision 31))
-                                       (set-player! player (world-camera world) 0)))))
+                                (player-hstate-set! (world-player world) 'down))))
 
-                      (pp (check-collision-bottom (world-player world) (world-tiles world)))
+
+                      ;;Move player to down
+                      (let* ((player (world-player world)))
+                        (if (eq? (player-hstate player) 'down)
+                            (if (not (check-collision-bottom (world-player world) (world-tiles world)))
+                                (begin
+                                  (player-posy-set! player (+ (player-posy player) (* 0.3 delta-time)))
+                                  (set-player! (world-player world) (world-camera world) 0)) 
+                                (set-player! player (world-camera world) 0))))
+                      
+                      ;;(pp (check-collision-bottom (world-player world) (world-tiles world)))
 
                       
                       ;Control limits jump
@@ -962,48 +955,45 @@ end-of-shader
 
 
 
-                      (let process-all-enemies ((rest (world-enemies world)))
+                      (let process-enemies ((rest (world-enemies world)))
                         (when (not (null? rest))
-                              (when 
-                               (and 
-                                (< (abs 
-                                    (- (enemy-posx (car rest)) (player-posx (world-player world)))) 1280) 
-                                (< (player-posx (world-player world)) (+ (enemy-posx (car rest)) 500)))
-                               ;(pp "position: ")
-                               ;(pp (enemy-direction (car rest)))
-                               (case (enemy-type (car rest))
-                                 ((kamikaze)
-                                  (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
-                                      (begin (if (not (check-collision-right-tiles-enemy (car rest) (world-tiles world)))
-                                                 (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
-                                                 (enemy-posy-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time))))
-                                             (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                                      (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time))))
-                                  
-                                  (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
-
-                                 ((defender)
-                                  (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
-                                      (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                                  (if (check-collision-right-tiles-enemy (car rest) (world-tiles world))
-                                      (enemy-direction-set! (car rest) 'right)
-                                      (if (check-collision-left-tiles-enemy (car rest) (world-tiles world))
-                                          (enemy-direction-set! (car rest) 'left)))
-                                  (if (eq? (enemy-direction (car rest)) 'right)
-                                      (enemy-posx-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time)))
-                                      (if (eq? (enemy-direction (car rest)) 'left)
-                                          (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
-                                  
-                                  (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
+                              (when (and 
+                                     (< (abs 
+                                         (- (enemy-posx (car rest)) (player-posx (world-player world)))) 1280) 
+                                     (< (player-posx (world-player world)) (+ (enemy-posx (car rest)) 500)))
+                                    (case (enemy-type (car rest))
+                                      ((kamikaze)
+                                       (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                                           (begin (if (not (check-collision-right-tiles-enemy (car rest) (world-tiles world)))
+                                                      (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
+                                                      (enemy-posy-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time))))
+                                                  (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                                           (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time))))
+                                       
+                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
+                                      
+                                      ((defender)
+                                       (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                                           (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                                       (if (check-collision-right-tiles-enemy (car rest) (world-tiles world))
+                                           (enemy-direction-set! (car rest) 'right)
+                                           (if (check-collision-left-tiles-enemy (car rest) (world-tiles world))
+                                               (enemy-direction-set! (car rest) 'left)))
+                                       (if (eq? (enemy-direction (car rest)) 'right)
+                                           (enemy-posx-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time)))
+                                           (if (eq? (enemy-direction (car rest)) 'left)
+                                               (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
+                                       
+                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
                               
                               
-                              (process-all-enemies (cdr rest))))
-
+                              (process-enemies (cdr rest))))
+                      
                      
 
                       
                       ;; ;;Kill enemies
-                      (let loop ((rest (world-enemies world)) (count (+ (length (world-tiles world)) 1)))
+                      (let kill-enemies ((rest (world-enemies world)) (count (+ (length (world-tiles world)) 1)))
                         (unless (null? rest)
                                 (if  (< (abs (- (enemy-posx (car rest)) (player-posx (world-player world)))) 100)
                                      (begin 
@@ -1019,9 +1009,9 @@ end-of-shader
                                                0.0
                                                0.0
                                                0.0))
-                                             (loop (cdr rest) (+ count 1)))
-                                           (loop (cdr rest) (+ count 1)))))
-                                (loop (cdr rest) (+ count 1))))
+                                             (kill-enemies (cdr rest) (+ count 1)))
+                                           (kill-enemies (cdr rest) (+ count 1)))))
+                                (kill-enemies (cdr rest) (+ count 1))))
 
                       
 
