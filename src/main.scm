@@ -232,7 +232,7 @@
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
                                     (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
-                (if (and (<= topA (+ bottomB 10)) (> topA topB) (>= rightA leftB) (<= leftA rightB))
+                (if (and (<= topA (+ bottomB 12)) (> topA topB) (>= rightA leftB) (<= leftA rightB))
                     #t
                     (loop (cdr rest))))))))
 
