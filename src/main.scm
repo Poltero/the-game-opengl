@@ -953,54 +953,6 @@ end-of-shader
                       (update-player-points-for-take-coin 
                        (world-player world) (world-coins world) (+ (length (world-tiles world)) 1 (length (world-enemies world))))
 
-                      
-                      ;;(pp (camera-position (world-camera world)))
-                      
-                      ;; ;;Add all tiles of the world to buffer
-                      
-
-                      
-                      ;;Add all coins of the world to buffer
-                      ;; (let add-all-coins-of-world ((rest (world-coins world)))
-                      ;;   (when (not (null? rest))
-                      ;;         (add-element-to-vector!
-                      ;;          (exact->inexact (- (coin-posx (car rest)) (camera-position (world-camera world))))
-                      ;;          (exact->inexact (coin-posy (car rest)))
-                      ;;          (coin-width (car rest))
-                      ;;          (coin-height (car rest)))
-                      ;;         (add-all-coins-of-world (cdr rest))))
-                      
-
-                      ;;Add all enemies of the world to buffer
-                      ;; (let move-all-enemies-of-world ((rest (world-enemies world)))
-                      ;;   (when (not (null? rest))
-                      ;;         (case (enemy-type (car rest))
-                      ;;           ((kamikaze)
-                      ;;            (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
-                      ;;                (begin 
-                      ;;                  (if (not (check-collision-right-tiles-enemy (car rest) (world-tiles world))) 
-                      ;;                      (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))
-                      ;;                      (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                      ;;                  (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                      ;;                (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time))))
-                      ;;            ;(set-enemies (world-enemies world) (world-camera world));
-                      ;;            )
-                      ;;           ((defender)
-                      ;;            (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
-                      ;;                (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                      ;;            (if (check-collision-right-tiles-enemy (car rest) (world-tiles world))
-                      ;;                (enemy-direction-set! (car rest) 'right)
-                      ;;                (if (check-collision-left-tiles-enemy (car rest) (world-tiles world))
-                      ;;                    (enemy-direction-set! (car rest) 'left)))
-                      ;;            (if (eq? (enemy-direction (car rest)) 'right)
-                      ;;                (enemy-posx-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time)))
-                      ;;                (if (eq? (enemy-direction (car rest)) 'left)
-                      ;;                    (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
-
-                      ;;                   ;(set-enemies (world-enemies world) (world-camera world))
-                      ;;            ))
-                      ;;         ;(set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1))
-                      ;;         (move-all-enemies-of-world (cdr rest))))
 
 
                       (let process-all-enemies ((rest (world-enemies world)))
@@ -1021,22 +973,25 @@ end-of-shader
                                              (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
                                       (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time))))
                                   
+                                  (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
+
+                                 ((defender)
+                                  (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                                      (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
+                                  (if (check-collision-right-tiles-enemy (car rest) (world-tiles world))
+                                      (enemy-direction-set! (car rest) 'right)
+                                      (if (check-collision-left-tiles-enemy (car rest) (world-tiles world))
+                                          (enemy-direction-set! (car rest) 'left)))
+                                  (if (eq? (enemy-direction (car rest)) 'right)
+                                      (enemy-posx-set! (car rest) (+ (enemy-posx (car rest)) (* 0.1 delta-time)))
+                                      (if (eq? (enemy-direction (car rest)) 'left)
+                                          (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
+                                  
                                   (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
                               
                               
                               (process-all-enemies (cdr rest))))
 
-                      
-                      
-                      
-                      
-                      ;;Add player to buffer
-                      ;; (if (eq? (world-gamestates world) 'gamescreen)
-                      ;;     (let add-player-to-buffer ((player (world-player world)))
-                      ;;       (add-element-to-vector! (- (player-posx player) (camera-position (world-camera world)))
-                      ;;                               (player-posy player) 
-                      ;;                               (player-width player) 
-                      ;;                               (player-height player))))
                      
 
                       
@@ -1076,11 +1031,6 @@ end-of-shader
 
                       ;;End you lost
 
-
-
-
-                      ;; (if (eq? (world-gamestates world) 'gamescreen)
-                      ;;     (println (object->string (camera-position (world-camera world)))))
                       
                       
                       ;; -- Draw --
