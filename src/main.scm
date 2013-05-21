@@ -597,8 +597,7 @@ end-of-shader
                (texture-image* (IMG_Load "assets/128x128.png"))
                
                ;;Background Music
-               (background-music* (or (Mix_LoadMUS "assets/background.ogg")
-                                      (fusion:error (string-append "Unable to load OGG music -- " (Mix_GetError))))))
+               (background-music* 'nothing))
           
           
           
@@ -841,7 +840,11 @@ end-of-shader
                          
                          (set! logic-states 'none)
 
-                         ;;Empieza la musica de fondo 
+                         ;;Empieza la musica de fondo
+
+
+                         (set! background-music* (or (Mix_LoadMUS (string-append "assets/background" (number->string level-number) ".ogg"))
+                                      (fusion:error (string-append "Unable to load OGG music -- " (Mix_GetError)))))
 
                          (if (= 0 (Mix_PlayingMusic))
                              (unless (Mix_FadeInMusic background-music* -1 1000)
@@ -860,7 +863,9 @@ end-of-shader
                       
                       (set! level-number (+ level-number 1))
                       (set! vertex-data-vector '#f32())
-                      (set! logic-states 'start))
+                      (set! logic-states 'start)
+
+                      (Mix_FreeMusic background-music*))
 
                      
                      ((lose)
