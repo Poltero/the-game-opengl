@@ -841,9 +841,15 @@ end-of-shader
                          
                          (set! logic-states 'none)
 
-                         ;;Empieza la musica de fondo
+                         ;;Empieza la musica de fondo 
+
                          (if (= 0 (Mix_PlayingMusic))
-                             (Mix_PlayMusic background-music* -1)))
+                             (unless (Mix_FadeInMusic background-music* -1 1000)
+                                     (fusion:error (string-append "Unable to play OGG music -- " (Mix_GetError))))
+                             (Mix_FadeOutMusic 1000)))
+
+
+                   
                    
                    (case (world-gamestates world)
                      ((win)
@@ -861,7 +867,14 @@ end-of-shader
                       ;;Reset list of the world
                       (world-tiles-set! world '())
                       (world-enemies-set! world '())
-                      (world-coins-set! world '()))
+                      (world-coins-set! world '())
+
+
+                      ;; Stop music
+                      (Mix_FadeOutMusic 1000)
+                      
+                      )
+
                      
                      ((gamescreen)
                       
