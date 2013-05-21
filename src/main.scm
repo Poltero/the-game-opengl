@@ -564,6 +564,11 @@ end-of-shader
         (glViewport 0 0 screen-width screen-height)
         (glScissor 0 0 screen-width screen-height)
 
+
+        ;;Start sound mixer
+        (unless (= 0 (Mix_OpenAudio 44100 MIX_DEFAULT_FORMAT 2 1024))
+                (fusion:error (string-append "Unable to initialize sound system -- " (Mix_GetError)))) 
+
         ;; Generate programs, buffers, textures
         (let* ((perspective-matrix (matrix:* (make-translation-matrix -1.0 1.0 0.0)
                                              (matrix:* (make-scaling-matrix (/ 2.0 screen-width) (/ -2.0 screen-height) 1.0)
@@ -589,7 +594,16 @@ end-of-shader
                (shaders (list (fusion:create-shader GL_VERTEX_SHADER vertex-shader)
                               (fusion:create-shader GL_FRAGMENT_SHADER fragment-shader)))
                (shader-program (fusion:create-program shaders))
-               (texture-image* (IMG_Load "assets/128x128.png")))
+               (texture-image* (IMG_Load "assets/128x128.png"))
+               
+               ;;Background Music
+               (background-music* (or (Mix_LoadMUS "assets/background.ogg")
+                                      (fusion:error (string-append "Unable to load OGG music -- " (Mix_GetError))))))
+          
+          
+          
+          
+
           ;; Clean up shaders once the program has been compiled and linked
           (for-each glDeleteShader shaders)
 
@@ -825,7 +839,11 @@ end-of-shader
                            (set-coins! 
                             coins (world-camera world) (+ (length tiles) (length enemies) 1)))
                          
-                         (set! logic-states 'none))
+                         (set! logic-states 'none)
+
+                         ;;Empieza la musica de fondo
+                         (if (= 0 (Mix_PlayingMusic))
+                             (Mix_PlayMusic background-music* -1)))
                    
                    (case (world-gamestates world)
                      ((win)
