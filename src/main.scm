@@ -29,6 +29,20 @@
 (define position-y-origin 0)
 
 
+(define screen-width 1280.0)
+(define screen-height 752.0)
+
+
+(define add-background-menu-screen (lambda (px)
+                        (set! vertex-data-vector 
+                        (f32vector-append vertex-data-vector 
+                                          (list->f32vector (list 0.5 0.0 (* px 0.15) 0.31
+                                                                 0.5 (+ 0.0 700) (* px 0.15) 0.45
+                                                                 (+ 0.5 1310) (+ 0.0 700) (* 0.15 (+ px 1)) 0.45
+                                                                 (+ 0.5 1310) 0.0 (* 0.15 (+ px 1)) 0.31))))))
+
+
+
 
 (define-structure tile posx posy width height)
 (define-structure camera position state speed)
@@ -48,10 +62,10 @@
 (define create-f32vector!
   (lambda (x y width height px py)
     (let ((vector 
-           (f32vector x y px py
-                      (+ x width) y px py
-                      (+ x width) (+ y height) px py
-                      x (+ y height) px py)))
+           (f32vector x y (* px 0.083) (* py 0.05)
+                      (+ x width) y (* (+ px 1) 0.083) (* py 0.05)
+                      (+ x width) (+ y height) (* (+ px 1) 0.083) (* (+ py 1) 0.05)
+                      x (+ y height) (* px 0.083) (* (+ py 1) 0.05))))
       vector)))
 
 
@@ -594,7 +608,7 @@ end-of-shader
                (shaders (list (fusion:create-shader GL_VERTEX_SHADER vertex-shader)
                               (fusion:create-shader GL_FRAGMENT_SHADER fragment-shader)))
                (shader-program (fusion:create-program shaders))
-               (texture-image* (IMG_Load "assets/128x128.png"))
+               (texture-image* (IMG_Load "assets/template.png"))
                
                ;;Background Music
                (background-music* 'nothing))
@@ -609,9 +623,9 @@ end-of-shader
           ;; Texture
           (glGenTextures 1 texture-id*)
           (glBindTexture GL_TEXTURE_2D (*->GLuint texture-id*))
-          (glTexImage2D GL_TEXTURE_2D 0 GL_RGB
+          (glTexImage2D GL_TEXTURE_2D 0 GL_RGBA
                         (SDL_Surface-w texture-image*) (SDL_Surface-h texture-image*)
-                        0 GL_RGB GL_UNSIGNED_BYTE
+                        0 GL_RGBA GL_UNSIGNED_BYTE
                         (SDL_Surface-pixels texture-image*))
           (glTexParameteri GL_TEXTURE_2D GL_TEXTURE_BASE_LEVEL 0)
           (glTexParameteri GL_TEXTURE_2D GL_TEXTURE_MAX_LEVEL 0)
@@ -663,7 +677,14 @@ end-of-shader
             
             (glBindBuffer GL_ARRAY_BUFFER 0)
             (glBindVertexArray 0)
+            
+            
+            
 
+            
+
+            
+            
             
             ;;(pp (vector-length (vector-ref world-map 0)))
             
@@ -731,7 +752,7 @@ end-of-shader
                                        
                                        ((= key SDLK_RETURN)
                                         (when (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
-                                             (set! logic-states 'start)))
+                                              (set! logic-states 'start)))
                                        
                                        
                                        (else
@@ -791,7 +812,7 @@ end-of-shader
                            (event-loop)))
                    
                    
-
+                   
                    (when (eq? logic-states 'start)
                          (set-level-contents! level-number)
                          (set! max-count-x (- (vector-length (vector-ref (cdr (assq 'map level-contents)) 0)) 1))
@@ -811,8 +832,8 @@ end-of-shader
                                                                         (length (world-enemies world))
                                                                         1)
                                                                      16)
-                                                                 0.0))
-                        
+                                                                  0.0))
+                         
                          
                          ;;Inicializar todos los datos del vector
                          (let* ((count 0) 
@@ -828,8 +849,8 @@ end-of-shader
                              (player-posy player) 
                              (player-width player) 
                              (player-height player)
-                             1.0
-                             0.5))
+                             0.0
+                             0.0))
                            
                            (set-tiles! 
                             tiles (world-camera world) 1)
@@ -844,7 +865,7 @@ end-of-shader
 
 
                          (set! background-music* (or (Mix_LoadMUS (string-append "assets/background" (number->string level-number) ".ogg"))
-                                      (fusion:error (string-append "Unable to load OGG music -- " (Mix_GetError)))))
+                                                     (fusion:error (string-append "Unable to load OGG music -- " (Mix_GetError)))))
 
                          (if (= 0 (Mix_PlayingMusic))
                              (unless (Mix_FadeInMusic background-music* -1 1000)
@@ -855,6 +876,13 @@ end-of-shader
                    
                    
                    (case (world-gamestates world)
+                     ((splashscreen)
+                      
+                      
+                      (add-background-menu-screen 0.0))
+
+                     
+
                      ((win)
                       ;;Reset list of world
                       (world-tiles-set! world '())
@@ -956,18 +984,18 @@ end-of-shader
                       ;;(pp (check-collision-bottom (world-player world) (world-tiles world)))
 
                       
-                      ;Control limits jump
+                                        ;Control limits jump
                       (if (> position-y-origin (player-posy (world-player world)))
                           (player-hstate-set! (world-player world) 'down))
                       
                       
                       ;;Set camera
                       (when (eq? (camera-state (world-camera world)) 'auto)
-                          (camera-position-set! 
-                           (world-camera world) (+ (camera-position (world-camera world)) (* (camera-speed (world-camera world)) delta-time)))
-                          (set-player! (world-player world) (world-camera world) 0)
-                          (set-tiles! (world-tiles world) (world-camera world) 1)
-                          (set-coins! (world-coins world) (world-camera world) (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
+                            (camera-position-set! 
+                             (world-camera world) (+ (camera-position (world-camera world)) (* (camera-speed (world-camera world)) delta-time)))
+                            (set-player! (world-player world) (world-camera world) 0)
+                            (set-tiles! (world-tiles world) (world-camera world) 1)
+                            (set-coins! (world-coins world) (world-camera world) (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
 
                       
 
@@ -980,7 +1008,7 @@ end-of-shader
                           (world-gamestates-set! world 'win))
 
 
-                      ;Calculate collision with coins
+                                        ;Calculate collision with coins
                       (update-player-points-for-take-coin 
                        (world-player world) (world-coins world) (+ (length (world-tiles world)) 1 (length (world-enemies world))))
 
@@ -1020,7 +1048,7 @@ end-of-shader
                               
                               (process-enemies (cdr rest))))
                       
-                     
+                      
 
                       
                       ;; ;;Kill enemies
@@ -1052,47 +1080,53 @@ end-of-shader
                             (set! vertex-data-vector '#f32()))
 
                       (when (< (- (player-posx (world-player world)) (camera-position (world-camera world))) (* -1 (player-width (world-player world))))
-                          (world-gamestates-set! world 'lose)
-                          (set! vertex-data-vector '#f32()))
+                            (world-gamestates-set! world 'lose)
+                            (set! vertex-data-vector '#f32()))
 
                       (when (> (player-posy (world-player world)) 750)
-                          (world-gamestates-set! world 'lose)
-                          (set! vertex-data-vector '#f32()))
+                            (world-gamestates-set! world 'lose)
+                            (set! vertex-data-vector '#f32()))))
 
-                      ;;End you lost
 
-                      
-                      
-                      ;; -- Draw --
-                      (glClearColor 0.0 0.0 0.0 0.0)
-                      (glClear GL_COLOR_BUFFER_BIT)
-                      
-                      (glActiveTexture (+ GL_TEXTURE0 texture-unit))
-                      (glBindTexture GL_TEXTURE_2D (*->GLuint texture-id*))
-                      (glBindSampler texture-unit (*->GLuint sampler-id*))
+
+
+
+                   ;;-- Draw
+                   (glClearColor 0.0 0.0 0.0 0.0)
+                   (glClear GL_COLOR_BUFFER_BIT)
+                   
+                   (glActiveTexture (+ GL_TEXTURE0 texture-unit))
+                   (glBindTexture GL_TEXTURE_2D (*->GLuint texture-id*))
+                   (glBindSampler texture-unit (*->GLuint sampler-id*))
                       
                       ;; Begin VAO
-                      (glBindVertexArray (*->GLuint main-vao-id*))
+                     
+                   
+                   (glBindVertexArray (*->GLuint main-vao-id*))
                       ;; Update vertex data buffer
-                      (glBindBuffer GL_ARRAY_BUFFER position-buffer-object-id)
+                     
+                   
+                   (glBindBuffer GL_ARRAY_BUFFER position-buffer-object-id)
                       #;
                       (glBufferSubData GL_ARRAY_BUFFER
                       0
                       (* (f32vector-length vertex-data-vector) GLfloat-size)
-                      (f32vector->GLfloat* vertex-data-vector))
-                      (glBufferData GL_ARRAY_BUFFER
-                                    (* (f32vector-length vertex-data-vector) GLfloat-size)
-                                    (f32vector->GLfloat* vertex-data-vector)
-                                    GL_DYNAMIC_DRAW)
-                      
-                      (glUseProgram shader-program)
-                      (glDrawArrays GL_QUADS 0 (/ (f32vector-length vertex-data-vector) 4))
-                      (glUseProgram 0)
-                      (glBindVertexArray 0)
+                     (f32vector->GLfloat* vertex-data-vector))
+                   (glBufferData GL_ARRAY_BUFFER
+                                 (* (f32vector-length vertex-data-vector) GLfloat-size)
+                                 (f32vector->GLfloat* vertex-data-vector)
+                                 GL_DYNAMIC_DRAW)
+                   
+                   (glUseProgram shader-program)
+                   (glDrawArrays GL_QUADS 0 (/ (f32vector-length vertex-data-vector) 4))
+                   (glUseProgram 0)
+                   (glBindVertexArray 0)
                       ;; End VAO
-                      
-                      (SDL_GL_SwapWindow win)))
-          (main-loop world (SDL_GetTicks)))
+                     
+                   
+                   
+                   (SDL_GL_SwapWindow win)
+                   (main-loop world (SDL_GetTicks)))
                  ))
               (SDL_LogInfo SDL_LOG_CATEGORY_APPLICATION "Bye.")
               (SDL_GL_DeleteContext ctx)
