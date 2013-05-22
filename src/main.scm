@@ -62,10 +62,10 @@
 (define create-f32vector!
   (lambda (x y width height px py)
     (let ((vector 
-           (f32vector x y (* px 0.014) 0.0
-                      x (+ y height) (* px 0.014) 0.014
-                      (+ x width) (+ y height) (* (+ px 1.0) 0.014) 0.014
-                      (+ x width) y (* (+ px 1.0) 0.014) 0.0)))
+           (f32vector x y (* px 0.014) (* py 0.014)
+                      x (+ y height) (* px 0.014) (* (+ py 1.0) 0.014)
+                      (+ x width) (+ y height) (* (+ px 1.0) 0.014) (* (+ py 1) 0.014)
+                      (+ x width) y (* (+ px 1.0) 0.014) (* py 0.014))))
       vector)))
 
 
@@ -78,7 +78,7 @@
 
 
 (define set-player! 
-  (lambda (player camera start)
+  (lambda (player camera start position)
     (set-element-in-vector!
      start
      (create-f32vector! 
@@ -86,8 +86,12 @@
       (exact->inexact (player-posy player))
       (player-width player)
       (player-height player)
-      2.9
-      0.5))))
+      (case (pv position)
+        ((left)
+         1.9)
+        ((rigth)
+         2.9))
+      0.0))))
 
 (define set-tiles! 
   (lambda (tiles camera start)
@@ -100,8 +104,8 @@
               (exact->inexact (tile-posy (car rest)))
               (tile-width (car rest))
               (tile-height (car rest))
-              1.0
-              1.0))
+              8.0
+              10.0))
             (set-tiles-in-vector! (cdr rest) (+ count 1))))))
 
 (define set-enemies! 
@@ -116,7 +120,7 @@
               (enemy-width (car rest))
               (enemy-height (car rest))
               7.1
-              0.5))
+              0.0))
             (set-enemies-in-vector! (cdr rest) (+ count 1))))))
 
 (define set-coins! 
@@ -130,8 +134,8 @@
               (exact->inexact (coin-posy (car rest)))
               (coin-width (car rest))
               (coin-height (car rest))
-              0.5
-              1.0))
+              0.1
+              9.0))
             (set-coins-in-vector! (cdr rest) (+ count 1))))))
 
 
@@ -631,6 +635,9 @@ end-of-shader
           (glTexParameteri GL_TEXTURE_2D GL_TEXTURE_MAX_LEVEL 0)
           (glBindTexture GL_TEXTURE_2D 0)
           (SDL_FreeSurface texture-image*)
+          (glEnable GL_BLEND)
+          (glBlendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA)
+
 
           ;; Uniforms
           (glUseProgram shader-program)
@@ -692,7 +699,9 @@ end-of-shader
             (let ((event* (alloc-SDL_Event)))
               (call/cc
                (lambda (quit)
-                 (let main-loop ((world (make-world 'splashscreen '() 'none (make-player 0.0 0.0 0.0 0.0 'none 'none 0) '() '())) (time (SDL_GetTicks)))
+                 (let main-loop ((world (make-world 'splashscreen '() 'none (make-player 0.0 0.0 0.0 0.0 'none 'none 0) '() '()))
+                                 (time (SDL_GetTicks))
+                                 (position-texture-player 'rigth))
                    (set! delta-time (- time last-time))
                    (set! last-time time)
                    (let event-loop ()
@@ -924,18 +933,19 @@ end-of-shader
                             (if (not (check-collision-right-tiles player tiles))
                                 (begin
                                   (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
+                                  (set! position-texture-player 'left)
                                   (if (eq? (camera-state camera) 'on)
                                       (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time))))
                                   
                                   
                                   (set-player! 
-                                   player camera 0)
+                                   player camera 0 'left)
                                   (set-tiles!
                                    tiles camera 1)
                                   (set-coins!
                                    (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
                                 (set-player! 
-                                 player (world-camera world) 0))))
+                                 player (world-camera world) 0 position-texture-player))))
                       
 
                       ;;Move player to right
@@ -944,18 +954,19 @@ end-of-shader
                             (if (not (check-collision-left-tiles player tiles))
                                 (begin
                                   (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
+                                  (set! position-texture-player 'rigth)
                                   (if (eq? (camera-state camera) 'on)
                                       (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time))))
                                   
                                   
                                   (set-player! 
-                                   player camera 0)
+                                   player camera 0 'rigth)
                                   (set-tiles!
                                    tiles camera 1)
                                   (set-coins!
                                    (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
                                 (set-player! 
-                                 player (world-camera world) 0))))
+                                 player (world-camera world) 0 position-texture-player))))
                       
 
                       ;;Manage states up's
@@ -970,7 +981,7 @@ end-of-shader
                             (if (not (check-collision-top (world-player world) (world-tiles world)))      
                                 (begin
                                   (player-posy-set! player (- (player-posy player) (* 0.3 delta-time)))
-                                  (set-player! (world-player world) (world-camera world) 0))
+                                  (set-player! (world-player world) (world-camera world) 0 position-texture-player))
                                 (player-hstate-set! (world-player world) 'down))))
 
 
@@ -980,8 +991,8 @@ end-of-shader
                             (if (not (check-collision-bottom (world-player world) (world-tiles world)))
                                 (begin
                                   (player-posy-set! player (+ (player-posy player) (* 0.3 delta-time)))
-                                  (set-player! (world-player world) (world-camera world) 0)) 
-                                (set-player! player (world-camera world) 0))))
+                                  (set-player! (world-player world) (world-camera world) 0 position-texture-player)) 
+                                (set-player! player (world-camera world) 0 position-texture-player))))
                       
                       ;;(pp (check-collision-bottom (world-player world) (world-tiles world)))
 
@@ -1128,7 +1139,7 @@ end-of-shader
                    
                    
                    (SDL_GL_SwapWindow win)
-                   (main-loop world (SDL_GetTicks)))
+                   (main-loop world (SDL_GetTicks) position-texture-player))
                  ))
               (SDL_LogInfo SDL_LOG_CATEGORY_APPLICATION "Bye.")
               (SDL_GL_DeleteContext ctx)
