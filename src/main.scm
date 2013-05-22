@@ -44,7 +44,8 @@
 
 
 
-(define-structure tile posx posy width height)
+
+(define-structure tile posx posy width height type)
 (define-structure camera position state speed)
 (define-structure enemy posx posy width height points type direction)
 (define-structure player posx posy width height vstate hstate score)
@@ -86,7 +87,7 @@
       (exact->inexact (player-posy player))
       (player-width player)
       (player-height player)
-      (case (pv position)
+      (case  position
         ((left)
          1.9)
         ((rigth)
@@ -104,7 +105,15 @@
               (exact->inexact (tile-posy (car rest)))
               (tile-width (car rest))
               (tile-height (car rest))
-              8.0
+              (case (tile-type (car rest))
+                ((normal)
+                 8.0)
+                ((unique)
+                 8.0)
+                ((enemy)
+                 10.0)
+                ((with-coins)
+                 11.5))
               10.0))
             (set-tiles-in-vector! (cdr rest) (+ count 1))))))
 
@@ -119,7 +128,13 @@
               (exact->inexact (enemy-posy (car rest)))
               (enemy-width (car rest))
               (enemy-height (car rest))
-              7.1
+              (case (enemy-direction (car rest))
+                ((left)
+                 7.1)
+                ((right)
+                 8.1)
+                (else
+                 7.1))
               0.0))
             (set-enemies-in-vector! (cdr rest) (+ count 1))))))
 
@@ -430,30 +445,30 @@
                 (let create-plataform-normal ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                   (if (< number 4)
                       (begin
-                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest))
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0 'normal) rest))
                         (create-plataform-normal (+ number 1) (+ posx 39))))))
             (if (or (eq? element 2) (eq? element '+++))
                 (let create-plataform-double ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                   (if (< number 8)
                       (begin
-                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest))
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0 'with-coins) rest))
                         (create-plataform-double (+ number 1) (+ posx 39))))))
             (if (or (eq? element 'i) (eq? element '++))
                 (let create-unique-plataform ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
-                  (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest))))
+                  (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0 'unique) rest))))
 
             (if (eq? element '|--|)
                 (let create-plataform-for-enemy ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                   (when (= number 0)
-                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest))
-                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 99)) 40.0 40.0) rest))
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0 'enemy) rest))
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 99)) 40.0 40.0 'enemy) rest))
                         (create-plataform-for-enemy (+ number 1) (+ posx 39)))
                   (when (and (> number 0) (< number 7))
-                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest))
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0 'enemy) rest))
                         (create-plataform-for-enemy (+ number 1) (+ posx 39)))
                   (when (= number 7)
-                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0) rest))
-                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 100)) 40.0 40.0) rest)))))
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0 'enemy) rest))
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 100)) 40.0 40.0 'enemy) rest)))))
             (if (eq? element 'final)
                 (let create-final-level ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                   (set! level-final posx))))
@@ -839,13 +854,24 @@ end-of-shader
                          (set! vertex-data-vector (make-f32vector (* (+ (length (world-tiles world))
                                                                         (length (world-coins world))
                                                                         (length (world-enemies world))
-                                                                        1)
+                                                                        2)
                                                                      16)
                                                                   0.0))
                          
-                         
+                         ;;Set fondo level
+                         ;; (set-element-in-vector! 
+                         ;;    0 
+                         ;;    (create-f32vector!
+                         ;;     0.0
+                         ;;     0.0
+                         ;;     1280.0
+                         ;;     752.0
+                         ;;     33.0
+                         ;;     14.0))
+
+
                          ;;Inicializar todos los datos del vector
-                         (let* ((count 0) 
+                         (let* ((count 1) 
                                 (player (world-player world)) 
                                 (tiles (world-tiles world)) 
                                 (enemies (world-enemies world)) 
@@ -939,13 +965,13 @@ end-of-shader
                                   
                                   
                                   (set-player! 
-                                   player camera 0 'left)
+                                   player camera 1 position-texture-player)
                                   (set-tiles!
                                    tiles camera 1)
                                   (set-coins!
                                    (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
                                 (set-player! 
-                                 player (world-camera world) 0 position-texture-player))))
+                                 player (world-camera world) 1 position-texture-player))))
                       
 
                       ;;Move player to right
@@ -960,13 +986,13 @@ end-of-shader
                                   
                                   
                                   (set-player! 
-                                   player camera 0 'rigth)
+                                   player camera 1 position-texture-player)
                                   (set-tiles!
                                    tiles camera 1)
                                   (set-coins!
                                    (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
                                 (set-player! 
-                                 player (world-camera world) 0 position-texture-player))))
+                                 player (world-camera world) 1 position-texture-player))))
                       
 
                       ;;Manage states up's
@@ -981,7 +1007,7 @@ end-of-shader
                             (if (not (check-collision-top (world-player world) (world-tiles world)))      
                                 (begin
                                   (player-posy-set! player (- (player-posy player) (* 0.3 delta-time)))
-                                  (set-player! (world-player world) (world-camera world) 0 position-texture-player))
+                                  (set-player! (world-player world) (world-camera world) 1 position-texture-player))
                                 (player-hstate-set! (world-player world) 'down))))
 
 
@@ -991,8 +1017,8 @@ end-of-shader
                             (if (not (check-collision-bottom (world-player world) (world-tiles world)))
                                 (begin
                                   (player-posy-set! player (+ (player-posy player) (* 0.3 delta-time)))
-                                  (set-player! (world-player world) (world-camera world) 0 position-texture-player)) 
-                                (set-player! player (world-camera world) 0 position-texture-player))))
+                                  (set-player! (world-player world) (world-camera world) 1 position-texture-player)) 
+                                (set-player! player (world-camera world) 1 position-texture-player))))
                       
                       ;;(pp (check-collision-bottom (world-player world) (world-tiles world)))
 
@@ -1006,7 +1032,7 @@ end-of-shader
                       (when (eq? (camera-state (world-camera world)) 'auto)
                             (camera-position-set! 
                              (world-camera world) (+ (camera-position (world-camera world)) (* (camera-speed (world-camera world)) delta-time)))
-                            (set-player! (world-player world) (world-camera world) 0)
+                            (set-player! (world-player world) (world-camera world) 1 position-texture-player)
                             (set-tiles! (world-tiles world) (world-camera world) 1)
                             (set-coins! (world-coins world) (world-camera world) (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
 
