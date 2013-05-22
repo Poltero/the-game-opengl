@@ -86,7 +86,7 @@
       (exact->inexact (player-posy player))
       (player-width player)
       (player-height player)
-      1.0
+      2.9
       0.5))))
 
 (define set-tiles! 
@@ -849,7 +849,7 @@ end-of-shader
                              (player-posy player) 
                              (player-width player) 
                              (player-height player)
-                             0.0
+                             6.0
                              0.0))
                            
                            (set-tiles! 
@@ -897,6 +897,8 @@ end-of-shader
 
                      
                      ((lose)
+                      (add-background-menu-screen 2.93)
+                      
                       ;;Reset list of the world
                       (world-tiles-set! world '())
                       (world-enemies-set! world '())
