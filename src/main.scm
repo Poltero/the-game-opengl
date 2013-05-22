@@ -62,10 +62,10 @@
 (define create-f32vector!
   (lambda (x y width height px py)
     (let ((vector 
-           (f32vector x y (* px 0.083) (* py 0.05)
-                      (+ x width) y (* (+ px 1) 0.083) (* py 0.05)
-                      (+ x width) (+ y height) (* (+ px 1) 0.083) (* (+ py 1) 0.05)
-                      x (+ y height) (* px 0.083) (* (+ py 1) 0.05))))
+           (f32vector x y (* px 0.014) 0.0
+                      x (+ y height) (* px 0.014) 0.014
+                      (+ x width) (+ y height) (* (+ px 1.0) 0.014) 0.014
+                      (+ x width) y (* (+ px 1.0) 0.014) 0.0)))
       vector)))
 
 
@@ -115,7 +115,7 @@
               (exact->inexact (enemy-posy (car rest)))
               (enemy-width (car rest))
               (enemy-height (car rest))
-              0.5
+              7.1
               0.5))
             (set-enemies-in-vector! (cdr rest) (+ count 1))))))
 
