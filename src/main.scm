@@ -107,8 +107,12 @@
               (case (tile-type (car rest))
                 ((normal)
                  8.0)
+                ((left-normal)
+                 5.5)
+                ((rigth-normal)
+                 8.8)
                 ((unique)
-                 8.0)
+                 11.5)
                 ((enemy)
                  10.0)
                 ((with-coins)
@@ -444,7 +448,13 @@
                 (let create-plataform-normal ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
                   (if (< number 4)
                       (begin
-                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0 'normal) rest))
+                        (set! rest (cons (make-tile (exact->inexact posx) (exact->inexact (* (+ 0.7 count-y) 110)) 40.0 40.0 
+                                                    (cond ((= number 0)
+                                                           'left-normal)
+                                                          ((= number 3)
+                                                           'rigth-normal)
+                                                          (else
+                                                           'normal))) rest))
                         (create-plataform-normal (+ number 1) (+ posx 39))))))
             (if (or (eq? element 2) (eq? element '+++))
                 (let create-plataform-double ((number 0) (posx (+ (+ 0 (* 40 4)) (* count-x 100))))
