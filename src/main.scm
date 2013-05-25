@@ -32,6 +32,24 @@
 (define screen-width 1280.0)
 (define screen-height 752.0)
 
+(define max-jump 'none)
+
+(define map-boss  '#(#(1 1 1 z 1 z 1 z 1 z 1 z 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 b 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 + + + + + 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * 0 0 0 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1)
+                     #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
+
 
 (define add-background-menu-screen (lambda (px)
                         (set! vertex-data-vector 
@@ -82,7 +100,7 @@
     (set-element-in-vector!
      start
      (create-f32vector! 
-      (exact->inexact (- (player-posx player) (camera-position camera)))
+      (exact->inexact (- (player-posx player) (if (not (eq? camera 'none)) (camera-position camera) 0)))
       (exact->inexact (player-posy player))
       (player-width player)
       (player-height player)
@@ -100,7 +118,7 @@
             (set-element-in-vector!
              count
              (create-f32vector! 
-              (exact->inexact (- (tile-posx (car rest)) (camera-position camera)))
+              (exact->inexact (- (tile-posx (car rest)) (if (not (eq? camera 'none)) (camera-position camera) 0)))
               (exact->inexact (tile-posy (car rest)))
               (tile-width (car rest))
               (tile-height (car rest))
@@ -127,18 +145,24 @@
             (set-element-in-vector!
              count
              (create-f32vector! 
-              (exact->inexact (- (enemy-posx (car rest)) (camera-position camera)))
+              (exact->inexact (- (enemy-posx (car rest)) (if (not (eq? camera 'none)) (camera-position camera) 0)))
               (exact->inexact (enemy-posy (car rest)))
               (enemy-width (car rest))
               (enemy-height (car rest))
-              (case (enemy-direction (car rest))
-                ((left)
-                 7.1)
-                ((right)
-                 8.1)
-                (else
-                 7.1))
-              0.0))
+              (if (not (eq? (enemy-direction (car rest)) 'none))
+                  (case (enemy-direction (car rest))
+                    ((left)
+                     7.1)
+                    ((right)
+                     8.1)
+                    (else
+                     7.1))
+                  (case (enemy-type (car rest))
+                    ((zanahoria)
+                     1.5)))
+              (if (eq? (enemy-type (car rest)) 'zanahoria)
+                  10.0
+                  0.0)))
             (set-enemies-in-vector! (cdr rest) (+ count 1))))))
 
 (define set-coins! 
@@ -531,8 +555,39 @@
                (set! rest (cons (make-enemy (exact->inexact (+ posx 10)) (exact->inexact (* (+ 0.7 count-y) 99)) 30.0 30.0 10 'kamikaze 'none) rest))))
             ((*+)
              (let create-enemy-defender ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
-               (set! rest (cons (make-enemy (exact->inexact (+ posx 50)) (exact->inexact (* (+ 0.7 count-y) 99)) 40.0 40.0 10 'defender 'left) rest)))))
+               (set! rest (cons (make-enemy (exact->inexact (+ posx 50)) (exact->inexact (* (+ 0.7 count-y) 99)) 40.0 40.0 10 'defender 'left) rest))))
+            ((+*)
+             (let create-enemy-defender-inverse ((posx (+ (+ 0 (* 40 4)) (* count-x 100))))
+               (set! rest (cons (make-enemy (exact->inexact (+ posx 50)) (exact->inexact (* (+ 0.7 count-y) 99)) 100.0 100.0 10 'kamikaze 'none) rest)))))
           (if (< count-x max-count-x)
+              (loop rest-map rest (+ count-x 1) count-y)
+              (loop rest-map rest 0 (+ count-y 1))))
+        rest)))
+
+(define (create-map-boss l)
+  (let loop ((rest-map map-boss) (rest l) (count-x 0) (count-y 0))
+    (if (< count-y 15)
+        (begin
+          (case (vector-ref (vector-ref rest-map count-y) count-x)
+            ((1)
+             (set! rest (cons (make-tile (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 40.0 40.0 'enemy) rest)))
+            ((+)
+             (set! rest (cons (make-tile (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 40.0 40.0 'normal) rest))))
+          (if (< count-x 31)
+              (loop rest-map rest (+ count-x 1) count-y)
+              (loop rest-map rest 0 (+ count-y 1))))
+        rest)))
+
+(define (create-enemies-boss l)
+  (let loop ((rest-map map-boss) (rest l) (count-x 0) (count-y 0))
+    (if (< count-y 15)
+        (begin
+          (case (vector-ref (vector-ref rest-map count-y) count-x)
+            ((z)
+             (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 30.0 30.0 10 'zanahoria 'none) rest)))
+            ((*)
+             (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 30.0 30.0 10 'defender 'left) rest))))
+          (if (< count-x 31)
               (loop rest-map rest (+ count-x 1) count-y)
               (loop rest-map rest 0 (+ count-y 1))))
         rest)))
@@ -785,7 +840,7 @@ end-of-shader
                                        
                                        ((= key SDLK_RETURN)
                                         (when (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
-                                              (set! logic-states 'start)))
+                                              (set! logic-states 'start-level-boss)))
                                        
                                        
                                        (else
@@ -846,12 +901,12 @@ end-of-shader
                    
                    
                    
-                   (when (eq? logic-states 'start)
+                   (when (eq? logic-states 'start-level-game)
                          (set-level-contents! level-number)
                          (set! max-count-x (- (vector-length (vector-ref (cdr (assq 'map level-contents)) 0)) 1))
-
-                         (pp (cdr (assq 'camera level-contents)))
                          
+                         (pp (cdr (assq 'camera level-contents)))
+                     
                          (set! world (make-world 
                                       'gamescreen
                                       (create-tiles-map (world-tiles world))
@@ -869,12 +924,13 @@ end-of-shader
                          
                          
                          ;;Inicializar todos los datos del vector
+                         
                          (let* ((count 0) 
                                 (player (world-player world)) 
                                 (tiles (world-tiles world)) 
                                 (enemies (world-enemies world)) 
                                 (coins (world-coins world)))
-                           
+                       
                            (set-element-in-vector! 
                             count 
                             (create-f32vector!
@@ -893,13 +949,14 @@ end-of-shader
                             coins (world-camera world) (+ (length tiles) (length enemies) 1)))
                          
                          (set! logic-states 'none)
-
+                     
                          ;;Empieza la musica de fondo
-
+                         
+                         
 
                          (set! background-music* (or (Mix_LoadMUS (string-append "assets/background" (number->string level-number) ".ogg"))
-                                                     (fusion:error (string-append "Unable to load OGG music -- " (Mix_GetError)))))
-
+                                                 (fusion:error (string-append "Unable to load OGG music -- " (Mix_GetError)))))
+                         
                          (if (= 0 (Mix_PlayingMusic))
                              (unless (Mix_FadeInMusic background-music* -1 1000)
                                      (fusion:error (string-append "Unable to play OGG music -- " (Mix_GetError))))
@@ -907,13 +964,45 @@ end-of-shader
 
 
                    
+                   (when (eq? logic-states 'start-level-boss)
+                         (set! world (make-world 
+                                      'gamescreen
+                                      (create-map-boss (world-tiles world))
+                                      'none
+                                      (make-player 400.0 430.0 30.0 30.0 'none 'down 0)
+                                      'none
+                                      (create-enemies-boss (world-enemies world))))
+
+                         (set! vertex-data-vector (make-f32vector (* (+ (length (world-tiles world))
+                                                                        (length (world-enemies world))
+                                                                        1)
+                                                                     16)
+                                                                  0.0))
+
+                         (let* ((count 0) 
+                                (player (world-player world)) 
+                                (tiles (world-tiles world)) 
+                                (enemies (world-enemies world)) 
+                                (coins (world-coins world)))
+                       
+
+                           (set-player! 
+                                   player (world-camera world) 0 'rigth)
+                           
+                           (set-tiles! 
+                            tiles (world-camera world) 1)
+                           
+                           )
+
+                         (set! logic-states 'none))
+                   
                    
                    (case (world-gamestates world)
                      ((splashscreen)
                       
                       
                       (add-background-menu-screen 0.0))
-
+                     
                      
 
                      ((win)
@@ -924,10 +1013,10 @@ end-of-shader
                       
                       (set! level-number (+ level-number 1))
                       (set! vertex-data-vector '#f32())
-                      (set! logic-states 'start)
-
+                      (set! logic-states 'start-level-game)
+                      
                       (Mix_FreeMusic background-music*))
-
+                     
                      
                      ((lose)
                       (add-background-menu-screen 2.93)
@@ -946,7 +1035,7 @@ end-of-shader
                      
                      ((gamescreen)
                       
-
+                      
                       ;;Logic Events
                       
 
@@ -958,20 +1047,22 @@ end-of-shader
                                 (begin
                                   (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
                                   (set! position-texture-player 'left)
-                                  (if (eq? (camera-state camera) 'on)
-                                      (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time))))
+                                  (unless (eq? camera 'none)
+                                          (if (eq? (camera-state camera) 'on)
+                                              (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time)))))
                                   
                                   
                                   (set-player! 
                                    player camera 0 position-texture-player)
                                   (set-tiles!
                                    tiles camera 1)
-                                  (set-coins!
-                                   (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
+                                  (if (not (eq? (world-coins world) 'none)) 
+                                      (set-coins!
+                                       (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world))))))
                                 (set-player! 
                                  player (world-camera world) 0 position-texture-player))))
                       
-
+                      
                       ;;Move player to right
                       (let* ((player (world-player world)) (tiles (world-tiles world)) (camera (world-camera world)))
                         (if (eq? (player-vstate player) 'right)
@@ -979,26 +1070,28 @@ end-of-shader
                                 (begin
                                   (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
                                   (set! position-texture-player 'rigth)
-                                  (if (eq? (camera-state camera) 'on)
-                                      (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time))))
+                                  (unless (eq? camera 'none)
+                                          (if (eq? (camera-state camera) 'on)
+                                              (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))
                                   
                                   
                                   (set-player! 
                                    player camera 0 position-texture-player)
                                   (set-tiles!
                                    tiles camera 1)
-                                  (set-coins!
-                                   (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
+                                  (if (not (eq? (world-coins world) 'none))
+                                      (set-coins!
+                                       (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world))))))
                                 (set-player! 
                                  player (world-camera world) 0 position-texture-player))))
                       
-
+                      
                       ;;Manage states up's
                       (if (eq? (player-hstate (world-player world)) 'up) 
                           (if (check-collision-bottom (world-player world) (world-tiles world))
                               (player-hstate-set! (world-player world) 'jump)
                               (player-hstate-set! (world-player world) 'down)))
-
+                      
                       ;;Move player to up
                       (let* ((player (world-player world)))
                         (if (eq? (player-hstate player) 'jump) 
@@ -1007,7 +1100,7 @@ end-of-shader
                                   (player-posy-set! player (- (player-posy player) (* 0.3 delta-time)))
                                   (set-player! (world-player world) (world-camera world) 0 position-texture-player))
                                 (player-hstate-set! (world-player world) 'down))))
-
+                      
 
                       ;;Move player to down
                       (let* ((player (world-player world)))
@@ -1019,44 +1112,49 @@ end-of-shader
                                 (set-player! player (world-camera world) 0 position-texture-player))))
                       
                       ;;(pp (check-collision-bottom (world-player world) (world-tiles world)))
-
                       
-                                        ;Control limits jump
+                      
+                      ;Control limits jump
                       (if (> position-y-origin (player-posy (world-player world)))
                           (player-hstate-set! (world-player world) 'down))
                       
                       
+                      
                       ;;Set camera
-                      (when (eq? (camera-state (world-camera world)) 'auto)
-                            (camera-position-set! 
-                             (world-camera world) (+ (camera-position (world-camera world)) (* (camera-speed (world-camera world)) delta-time)))
-                            (set-player! (world-player world) (world-camera world) 0 position-texture-player)
-                            (set-tiles! (world-tiles world) (world-camera world) 1)
-                            (set-coins! (world-coins world) (world-camera world) (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
-
+                      (when (not (eq? (world-camera world) 'none))
+                          (when (eq? (camera-state (world-camera world)) 'auto)
+                                (camera-position-set! 
+                                 (world-camera world) (+ (camera-position (world-camera world)) (* (camera-speed (world-camera world)) delta-time)))
+                                (set-player! (world-player world) (world-camera world) 0 position-texture-player)
+                                (set-tiles! (world-tiles world) (world-camera world) 1)
+                                (set-coins! (world-coins world) (world-camera world) (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
+                          
+                          
+                          
+                          ;;keep the camera in bounds
+                          (if (< (camera-position (world-camera world)) 0)
+                              (camera-position-set! (world-camera world) 0))
+                          
+                          
+                          (if (> (camera-position (world-camera world)) (- level-final 640))
+                              (world-gamestates-set! world 'win)))
                       
-
-                      ;;keep the camera in bounds
-                      (if (< (camera-position (world-camera world)) 0)
-                          (camera-position-set! (world-camera world) 0))
-
                       
-                      (if (> (camera-position (world-camera world)) (- level-final 640))
-                          (world-gamestates-set! world 'win))
-
-
-                                        ;Calculate collision with coins
-                      (update-player-points-for-take-coin 
-                       (world-player world) (world-coins world) (+ (length (world-tiles world)) 1 (length (world-enemies world))))
-
-
-
+                      ;Calculate collision with coins
+                      (if (not (eq? (world-coins world) 'none))
+                          (update-player-points-for-take-coin 
+                           (world-player world) (world-coins world) (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
+                      
+                      
+                      
                       (let process-enemies ((rest (world-enemies world)))
                         (when (not (null? rest))
                               (when (and 
                                      (< (abs 
-                                         (- (enemy-posx (car rest)) (player-posx (world-player world)))) 1280) 
-                                     (< (player-posx (world-player world)) (+ (enemy-posx (car rest)) 500)))
+                                         (- (enemy-posx (car rest)) 
+                                            (if (not (eq? (world-camera world) 'none)) 
+                                                (camera-position (world-camera world)) 0))) 1280) 
+                                     )
                                     (case (enemy-type (car rest))
                                       ((kamikaze)
                                        (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
@@ -1080,22 +1178,28 @@ end-of-shader
                                            (if (eq? (enemy-direction (car rest)) 'left)
                                                (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
                                        
+                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
+                                      
+                                      ((zanahoria)
+                                       (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                                           (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
                                        (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
                               
                               
                               (process-enemies (cdr rest))))
-                      
-                      
+                          
+                          
 
-                      
-                      ;; ;;Kill enemies
+                          
+                          ;; ;;Kill enemies
+                          
                       (let kill-enemies ((rest (world-enemies world)) (count (+ (length (world-tiles world)) 1)))
                         (unless (null? rest)
                                 (if  (< (abs (- (enemy-posx (car rest)) (player-posx (world-player world)))) 100)
                                      (begin 
                                        (if (check-collision-bottom-player-with-enemy (world-player world) (car rest))
                                            (begin
-                                             (enemy-posx-set! (car rest) -20.0)
+                                             (enemy-posx-set! (car rest) -30.0)
                                              (set-element-in-vector!
                                               count
                                               (create-f32vector! 
@@ -1112,17 +1216,22 @@ end-of-shader
                       
 
                       ;;Player lost
-                      (when (or (check-collision-left-enemies (world-player world) (world-enemies world)) (check-collision-right-enemies (world-player world) (world-enemies world)))
+                      
+                      (when (or 
+                             (check-collision-left-enemies (world-player world) (world-enemies world)) 
+                             (check-collision-right-enemies (world-player world) (world-enemies world)))
                             (world-gamestates-set! world 'lose)
                             (set! vertex-data-vector '#f32()))
+                      (when (not (eq? (world-camera world) 'none))
+                            (when (< 
+                                   (- (player-posx (world-player world)) (camera-position (world-camera world))) 
+                                   (* -1 (player-width (world-player world))))
+                                  (world-gamestates-set! world 'lose)
+                                  (set! vertex-data-vector '#f32()))
 
-                      (when (< (- (player-posx (world-player world)) (camera-position (world-camera world))) (* -1 (player-width (world-player world))))
-                            (world-gamestates-set! world 'lose)
-                            (set! vertex-data-vector '#f32()))
-
-                      (when (> (player-posy (world-player world)) 750)
-                            (world-gamestates-set! world 'lose)
-                            (set! vertex-data-vector '#f32()))))
+                            (when (> (player-posy (world-player world)) 750)
+                                  (world-gamestates-set! world 'lose)
+                                  (set! vertex-data-vector '#f32())))))
 
 
 
@@ -1135,20 +1244,20 @@ end-of-shader
                    (glActiveTexture (+ GL_TEXTURE0 texture-unit))
                    (glBindTexture GL_TEXTURE_2D (*->GLuint texture-id*))
                    (glBindSampler texture-unit (*->GLuint sampler-id*))
-                      
-                      ;; Begin VAO
-                     
+                   
+                   ;; Begin VAO
+                   
                    
                    (glBindVertexArray (*->GLuint main-vao-id*))
-                      ;; Update vertex data buffer
-                     
+                   ;; Update vertex data buffer
+                   
                    
                    (glBindBuffer GL_ARRAY_BUFFER position-buffer-object-id)
-                      #;
-                      (glBufferSubData GL_ARRAY_BUFFER
-                      0
-                      (* (f32vector-length vertex-data-vector) GLfloat-size)
-                     (f32vector->GLfloat* vertex-data-vector))
+                   #;
+                   (glBufferSubData GL_ARRAY_BUFFER
+                   0
+                   (* (f32vector-length vertex-data-vector) GLfloat-size)
+                   (f32vector->GLfloat* vertex-data-vector))
                    (glBufferData GL_ARRAY_BUFFER
                                  (* (f32vector-length vertex-data-vector) GLfloat-size)
                                  (f32vector->GLfloat* vertex-data-vector)
@@ -1158,16 +1267,16 @@ end-of-shader
                    (glDrawArrays GL_QUADS 0 (/ (f32vector-length vertex-data-vector) 4))
                    (glUseProgram 0)
                    (glBindVertexArray 0)
-                      ;; End VAO
-                     
+                   ;; End VAO
+                   
                    
                    
                    (SDL_GL_SwapWindow win)
-                   (main-loop world (SDL_GetTicks) position-texture-player))
-                 ))
+                   (main-loop world (SDL_GetTicks) position-texture-player)
+                   )))
               (SDL_LogInfo SDL_LOG_CATEGORY_APPLICATION "Bye.")
               (SDL_GL_DeleteContext ctx)
               (SDL_DestroyWindow win)
-              (SDL_Quit)))))))
-  (##gc))
+              (SDL_Quit))))))
+    (##gc)))
 
