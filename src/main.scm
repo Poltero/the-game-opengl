@@ -34,20 +34,20 @@
 
 (define max-jump 'none)
 
-(define map-boss  '#(#(1 1 1 z 1 z 1 z 1 z 1 z 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)
+(define map-boss  '#(#(0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 1 1 1 1 1 1 1)
                      #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 b 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 b 0 0 0 1)
                      #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
                      #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
                      #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 + + + + + 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * 0 0 0 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * 0 0 + 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
                      #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
 
 
@@ -78,12 +78,12 @@
 
 
 (define create-f32vector!
-  (lambda (x y width height px py)
+  (lambda (x y width height px py factor)
     (let ((vector 
-           (f32vector x y (* px 0.014) (* py 0.014)
-                      x (+ y height) (* px 0.014) (* (+ py 1.0) 0.014)
-                      (+ x width) (+ y height) (* (+ px 1.0) 0.014) (* (+ py 1) 0.014)
-                      (+ x width) y (* (+ px 1.0) 0.014) (* py 0.014))))
+           (f32vector x y (* px factor) (* py factor)
+                      x (+ y height) (* px factor) (* (+ py 1.0) factor)
+                      (+ x width) (+ y height) (* (+ px 1.0) factor) (* (+ py 1) factor)
+                      (+ x width) y (* (+ px 1.0) factor) (* py factor))))
       vector)))
 
 
@@ -109,7 +109,8 @@
          1.9)
         ((rigth)
          2.9))
-      0.0))))
+      0.0
+      0.014))))
 
 (define set-tiles! 
   (lambda (tiles camera start)
@@ -135,7 +136,8 @@
                  10.0)
                 ((with-coins)
                  11.5))
-              10.0))
+              10.0
+              0.014))
             (set-tiles-in-vector! (cdr rest) (+ count 1))))))
 
 (define set-enemies! 
@@ -159,10 +161,25 @@
                      7.1))
                   (case (enemy-type (car rest))
                     ((zanahoria)
-                     1.5)))
-              (if (eq? (enemy-type (car rest)) 'zanahoria)
-                  10.0
-                  0.0)))
+                     1.5)
+                    ((explossion)
+                     0.1)
+                    ((boss)
+                     0.1)
+                    (else
+                     7.1)))
+              (case (enemy-type (car rest))
+                ((zanahoria explossion)
+                 10.0)
+                ((boss)
+                 1.0)
+                (else
+                 0.0))
+              (case (enemy-type (car rest))
+                ((boss)
+                 0.020)
+                (else
+                 0.014))))
             (set-enemies-in-vector! (cdr rest) (+ count 1))))))
 
 (define set-coins! 
@@ -177,7 +194,8 @@
               (coin-width (car rest))
               (coin-height (car rest))
               0.1
-              9.0))
+              9.0
+              0.014))
             (set-coins-in-vector! (cdr rest) (+ count 1))))))
 
 
@@ -586,7 +604,9 @@
             ((z)
              (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 30.0 30.0 10 'zanahoria 'none) rest)))
             ((*)
-             (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 30.0 30.0 10 'defender 'left) rest))))
+             (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 30.0 30.0 10 'defender 'left) rest)))
+            ((b)
+             (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 80.0 80.0 10 'boss 'none) rest))))
           (if (< count-x 31)
               (loop rest-map rest (+ count-x 1) count-y)
               (loop rest-map rest 0 (+ count-y 1))))
@@ -939,10 +959,14 @@ end-of-shader
                              (player-width player) 
                              (player-height player)
                              6.0
-                             0.0))
+                             0.0
+                             0.014))
                            
+                           
+
                            (set-tiles! 
                             tiles (world-camera world) 1)
+                           
                            (set-enemies! 
                             enemies (world-camera world) (+ (length tiles) 1))
                            (set-coins! 
@@ -951,6 +975,8 @@ end-of-shader
                          (set! logic-states 'none)
                      
                          ;;Empieza la musica de fondo
+
+                         
                          
                          
 
@@ -1179,8 +1205,18 @@ end-of-shader
                                                (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
                                        
                                        (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
+                                      ((explossion)
+                                       (enemy-posx-set! (car rest) -30.0))
                                       
                                       ((zanahoria)
+                                       (if (= (/ (player-score (world-player world)) 40) 1)
+                                           (if (and (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
+                                                    (not (= (enemy-posx (car rest)) -3.0)))
+                                               (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time)))
+                                               (enemy-type-set! (car rest) 'explossion)))
+                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
+
+                                      ((boss)
                                        (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
                                            (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
                                        (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
@@ -1199,10 +1235,12 @@ end-of-shader
                                      (begin 
                                        (if (check-collision-bottom-player-with-enemy (world-player world) (car rest))
                                            (begin
+                                             (player-score-set! (world-player world) (+ (player-score (world-player world)) 10))
                                              (enemy-posx-set! (car rest) -30.0)
                                              (set-element-in-vector!
                                               count
                                               (create-f32vector! 
+                                               0.0
                                                0.0
                                                0.0
                                                0.0
