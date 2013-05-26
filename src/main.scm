@@ -34,20 +34,20 @@
 
 (define max-jump 'none)
 
-(define map-boss  '#(#(0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 1 1 1 1 1 1 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 b 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 + + + + + 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * * * * 0 0 + 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+(define map-boss  '#(#(0 0 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 1 1 1 1 1 1 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 b 0 0 0 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
+                     #(1 1 x 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 1 0 0 0 x 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * 0 0 * 0 0 + 0 0 0 0 0 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
+                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
                      #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
 
 
@@ -111,6 +111,24 @@
          2.9))
       0.0
       0.014))))
+
+(define delete-of-type-tiles 
+  (lambda (tiles type start)
+    (let loop ((rest tiles) (count start))
+      (unless (null? rest)
+              (when (eq? (tile-type (car rest)) type)
+                  (tile-posx-set! (car rest) 0.0)
+                  (set-element-in-vector!
+                   count
+                   (create-f32vector! 
+                    0.0
+                    0.0
+                    0.0
+                    0.0
+                    0.0
+                    0.0
+                    0.0)))
+              (loop (cdr rest) (+ count 1))))))
 
 (define set-tiles! 
   (lambda (tiles camera start)
@@ -605,6 +623,8 @@
              (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 30.0 30.0 10 'zanahoria 'none) rest)))
             ((*)
              (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 30.0 30.0 10 'defender 'left) rest)))
+            ((x)
+             (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 60.0 60.0 10 'defender 'right) rest)))
             ((b)
              (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 80.0 80.0 10 'boss 'none) rest))))
           (if (< count-x 31)
@@ -860,7 +880,7 @@ end-of-shader
                                        
                                        ((= key SDLK_RETURN)
                                         (when (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
-                                              (set! logic-states 'start-level-boss)))
+                                              (set! logic-states 'start-level-game)))
                                        
                                        
                                        (else
@@ -1020,7 +1040,17 @@ end-of-shader
                            
                            )
 
-                         (set! logic-states 'none))
+                         (set! logic-states 'none)
+
+
+                         (set! background-music* (or (Mix_LoadMUS "assets/background-boss.ogg")
+                                                 (fusion:error (string-append "Unable to load OGG music -- " (Mix_GetError)))))
+                         
+                         
+                         (if (= 0 (Mix_PlayingMusic))
+                             (unless (Mix_FadeInMusic background-music* -1 1000)
+                                     (fusion:error (string-append "Unable to play OGG music -- " (Mix_GetError))))
+                             (Mix_FadeOutMusic 1000)))
                    
                    
                    (case (world-gamestates world)
@@ -1175,12 +1205,10 @@ end-of-shader
                       
                       (let process-enemies ((rest (world-enemies world)))
                         (when (not (null? rest))
-                              (when (and 
-                                     (< (abs 
-                                         (- (enemy-posx (car rest)) 
-                                            (if (not (eq? (world-camera world) 'none)) 
-                                                (camera-position (world-camera world)) 0))) 1280) 
-                                     )
+                              (when (< (abs 
+                                        (- (pv (enemy-posx (car rest))) 
+                                           (if (not (eq? (world-camera world) 'none)) 
+                                               (camera-position (world-camera world)) 0))) 1280)
                                     (case (enemy-type (car rest))
                                       ((kamikaze)
                                        (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
@@ -1206,7 +1234,9 @@ end-of-shader
                                        
                                        (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
                                       ((explossion)
-                                       (enemy-posx-set! (car rest) -30.0))
+                                       (enemy-posx-set! (car rest) -50.0)
+                                       (enemy-type-set! (car rest) 'none)
+                                       (delete-of-type-tiles (world-tiles world) 'normal 1))
                                       
                                       ((zanahoria)
                                        (if (= (/ (player-score (world-player world)) 40) 1)
@@ -1236,7 +1266,7 @@ end-of-shader
                                        (if (check-collision-bottom-player-with-enemy (world-player world) (car rest))
                                            (begin
                                              (player-score-set! (world-player world) (+ (player-score (world-player world)) 10))
-                                             (enemy-posx-set! (car rest) -30.0)
+                                             (enemy-posx-set! (car rest) -80.0)
                                              (set-element-in-vector!
                                               count
                                               (create-f32vector! 
