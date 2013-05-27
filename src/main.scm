@@ -1,7 +1,7 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
 
-(define level-number 1)
+(define level-number 2)
 
 (define game-contents
   (call-with-input-file "LevelData.dat" (lambda (port) (read-all port))))
@@ -34,21 +34,6 @@
 
 (define max-jump 'none)
 
-(define map-boss  '#(#(0 0 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 z 0 1 1 1 1 1 1 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 b 0 0 0 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1)
-                     #(1 1 x 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 1 0 0 0 x 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 * 0 0 * 0 0 + 0 0 0 0 0 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 + 0 0 0 0 0 1)
-                     #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
 
 
 (define add-background-menu-screen (lambda (px)
@@ -601,7 +586,7 @@
         rest)))
 
 (define (create-map-boss l)
-  (let loop ((rest-map map-boss) (rest l) (count-x 0) (count-y 0))
+  (let loop ((rest-map (cdr (assq 'map-boss level-contents))) (rest l) (count-x 0) (count-y 0))
     (if (< count-y 15)
         (begin
           (case (vector-ref (vector-ref rest-map count-y) count-x)
@@ -615,7 +600,7 @@
         rest)))
 
 (define (create-enemies-boss l)
-  (let loop ((rest-map map-boss) (rest l) (count-x 0) (count-y 0))
+  (let loop ((rest-map (cdr (assq 'map-boss level-contents))) (rest l) (count-x 0) (count-y 0))
     (if (< count-y 15)
         (begin
           (case (vector-ref (vector-ref rest-map count-y) count-x)
@@ -880,7 +865,9 @@ end-of-shader
                                        
                                        ((= key SDLK_RETURN)
                                         (when (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
-                                              (set! logic-states 'start-level-game)))
+                                              (set! logic-states 'start-level-game))
+                                        (when (eq? (world-gamestates world) 'none)
+                                              (world-gamestates-set! world 'credits)))
                                        
                                        
                                        (else
@@ -945,7 +932,7 @@ end-of-shader
                          (set-level-contents! level-number)
                          (set! max-count-x (- (vector-length (vector-ref (cdr (assq 'map level-contents)) 0)) 1))
                          
-                         (pp (cdr (assq 'camera level-contents)))
+                         ;(pp (cdr (assq 'camera level-contents)))
                      
                          (set! world (make-world 
                                       'gamescreen
@@ -1067,9 +1054,15 @@ end-of-shader
                       (world-enemies-set! world '())
                       (world-coins-set! world '())
                       
-                      (set! level-number (+ level-number 1))
                       (set! vertex-data-vector '#f32())
-                      (set! logic-states 'start-level-game)
+                      
+                      (if (eq? (world-camera world) 'none)
+                          (if (< level-number 2)
+                              (begin (set! logic-states 'start-level-game)
+                                     (set! level-number (+ level-number 1)))
+                              (begin (add-background-menu-screen 3.93)
+                                     (world-gamestates-set! world 'none)))
+                          (set! logic-states 'start-level-boss))
                       
                       (Mix_FreeMusic background-music*))
                      
@@ -1087,6 +1080,10 @@ end-of-shader
                       (Mix_FadeOutMusic 1000)
                       
                       )
+
+                     ((credits)
+                      
+                      (add-background-menu-screen 4.89))
 
                      
                      ((gamescreen)
@@ -1206,7 +1203,7 @@ end-of-shader
                       (let process-enemies ((rest (world-enemies world)))
                         (when (not (null? rest))
                               (when (< (abs 
-                                        (- (pv (enemy-posx (car rest))) 
+                                        (- (enemy-posx (car rest)) 
                                            (if (not (eq? (world-camera world) 'none)) 
                                                (camera-position (world-camera world)) 0))) 1280)
                                     (case (enemy-type (car rest))
@@ -1239,7 +1236,7 @@ end-of-shader
                                        (delete-of-type-tiles (world-tiles world) 'normal 1))
                                       
                                       ((zanahoria)
-                                       (if (= (/ (player-score (world-player world)) 40) 1)
+                                       (if (= (/ (player-score (world-player world)) (cdr (assq 'points-win-boss level-contents))) 1)
                                            (if (and (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
                                                     (not (= (enemy-posx (car rest)) -3.0)))
                                                (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time)))
@@ -1277,6 +1274,8 @@ end-of-shader
                                                0.0
                                                0.0
                                                0.0))
+                                             (if (eq? (enemy-type (car rest)) 'boss)
+                                                 (world-gamestates-set! world 'win))
                                              (kill-enemies (cdr rest) (+ count 1)))
                                            (kill-enemies (cdr rest) (+ count 1)))))
                                 (kill-enemies (cdr rest) (+ count 1))))
@@ -1285,9 +1284,8 @@ end-of-shader
 
                       ;;Player lost
                       
-                      (when (or 
-                             (check-collision-left-enemies (world-player world) (world-enemies world)) 
-                             (check-collision-right-enemies (world-player world) (world-enemies world)))
+                      (when (or (check-collision-left-enemies (world-player world) (world-enemies world)) 
+                                (check-collision-right-enemies (world-player world) (world-enemies world)))
                             (world-gamestates-set! world 'lose)
                             (set! vertex-data-vector '#f32()))
                       (when (not (eq? (world-camera world) 'none))
@@ -1295,11 +1293,11 @@ end-of-shader
                                    (- (player-posx (world-player world)) (camera-position (world-camera world))) 
                                    (* -1 (player-width (world-player world))))
                                   (world-gamestates-set! world 'lose)
-                                  (set! vertex-data-vector '#f32()))
+                                  (set! vertex-data-vector '#f32())))
 
-                            (when (> (player-posy (world-player world)) 750)
-                                  (world-gamestates-set! world 'lose)
-                                  (set! vertex-data-vector '#f32())))))
+                      (when (> (player-posy (world-player world)) 750)
+                            (world-gamestates-set! world 'lose)
+                            (set! vertex-data-vector '#f32()))))
 
 
 
