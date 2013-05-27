@@ -1,7 +1,7 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
 
-(define level-number 2)
+(define level-number 1)
 
 (define game-contents
   (call-with-input-file "LevelData.dat" (lambda (port) (read-all port))))
@@ -288,7 +288,7 @@
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest))))
                                     (rightB (+ (tile-posx (car rest)) (tile-width (car rest)))))
                 (if (and (>= bottomA (- topB 6)) (< bottomA bottomB) (>= rightA leftB) (<= leftA rightB))
-                    (player-posy-set! player (- topB 31))
+                    (player-posy-set! player (- topB (+ (player-width player) 1)))
                     (loop (cdr rest))))))))
 
 (define check-collision-top
