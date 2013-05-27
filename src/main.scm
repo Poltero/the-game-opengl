@@ -938,7 +938,7 @@ end-of-shader
                                       'gamescreen
                                       (create-tiles-map (world-tiles world))
                                       (make-camera 0.0 (cdr (assq 'camera level-contents)) 0.1)
-                                      (make-player 400.0 430.0 30.0 30.0 'none 'down 0)
+                                      (make-player 400.0 430.0 40.0 40.0 'none 'down 0)
                                       (create-coins-map (world-coins world))
                                       (create-enemies-map (world-enemies world))))
                          
