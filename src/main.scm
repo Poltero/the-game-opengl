@@ -39,10 +39,10 @@
 (define add-background-menu-screen (lambda (px)
                         (set! vertex-data-vector 
                         (f32vector-append vertex-data-vector 
-                                          (list->f32vector (list 0.5 0.0 (* px 0.15) 0.31
-                                                                 0.5 (+ 0.0 700) (* px 0.15) 0.45
-                                                                 (+ 0.5 1310) (+ 0.0 700) (* 0.15 (+ px 1)) 0.45
-                                                                 (+ 0.5 1310) 0.0 (* 0.15 (+ px 1)) 0.31))))))
+                                          (list->f32vector (list 0.5 0.0 (* px 0.25) 0.39
+                                                                 0.5 (+ 0.0 750) (* px 0.25) 0.535
+                                                                 1280.0 (+ 0.0 750) (* 0.25 (+ px 1)) 0.535
+                                                                 1280.0 0.0 (* 0.25 (+ px 1)) 0.39))))))
 
 
 
@@ -67,7 +67,7 @@
     (let ((vector 
            (f32vector x y (* px factor) (* py factor)
                       x (+ y height) (* px factor) (* (+ py 1.0) factor)
-                      (+ x width) (+ y height) (* (+ px 1.0) factor) (* (+ py 1) factor)
+                      (+ x width) (+ y height) (* (+ px 1.0) factor) (* (+ py 1.0) factor)
                       (+ x width) y (* (+ px 1.0) factor) (* py factor))))
       vector)))
 
@@ -91,11 +91,11 @@
       (player-height player)
       (case  position
         ((left)
-         1.9)
+         0.0)
         ((rigth)
-         2.9))
+         1.0))
       0.0
-      0.014))))
+      0.006))))
 
 (define delete-of-type-tiles 
   (lambda (tiles type start)
@@ -128,9 +128,9 @@
               (tile-height (car rest))
               (case (tile-type (car rest))
                 ((normal)
-                 8.0)
+                 7.0)
                 ((left-normal)
-                 5.5)
+                 6.4)
                 ((rigth-normal)
                  8.8)
                 ((unique)
@@ -139,8 +139,8 @@
                  10.0)
                 ((with-coins)
                  11.5))
-              10.0
-              0.014))
+              12.0
+              0.006))
             (set-tiles-in-vector! (cdr rest) (+ count 1))))))
 
 (define set-enemies! 
@@ -157,11 +157,11 @@
               (if (not (eq? (enemy-direction (car rest)) 'none))
                   (case (enemy-direction (car rest))
                     ((left)
-                     7.1)
+                     6.5)
                     ((right)
-                     8.1)
+                     7.6)
                     (else
-                     7.1))
+                     5.7))
                   (case (enemy-type (car rest))
                     ((zanahoria)
                      1.5)
@@ -170,7 +170,7 @@
                     ((boss)
                      0.1)
                     (else
-                     7.1)))
+                     6.6)))
               (case (enemy-type (car rest))
                 ((zanahoria explossion)
                  10.0)
@@ -182,7 +182,7 @@
                 ((boss)
                  0.020)
                 (else
-                 0.014))))
+                 0.006))))
             (set-enemies-in-vector! (cdr rest) (+ count 1))))))
 
 (define set-coins! 
@@ -716,7 +716,7 @@ end-of-shader
                (shaders (list (fusion:create-shader GL_VERTEX_SHADER vertex-shader)
                               (fusion:create-shader GL_FRAGMENT_SHADER fragment-shader)))
                (shader-program (fusion:create-program shaders))
-               (texture-image* (IMG_Load "assets/template.png"))
+               (texture-image* (IMG_Load "assets/templatev2.png"))
                
                ;;Background Music
                (background-music* 'nothing))
@@ -1068,7 +1068,7 @@ end-of-shader
                      
                      
                      ((lose)
-                      (add-background-menu-screen 2.93)
+                      (add-background-menu-screen 2.1)
                       
                       ;;Reset list of the world
                       (world-tiles-set! world '())
@@ -1236,7 +1236,7 @@ end-of-shader
                                        (delete-of-type-tiles (world-tiles world) 'normal 1))
                                       
                                       ((zanahoria)
-                                       (if (= (/ (player-score (world-player world)) (cdr (assq 'points-win-boss level-contents))) 1)
+                                       (if (>= (player-score (world-player world)) (cdr (assq 'points-win-boss level-contents)))
                                            (if (and (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
                                                     (not (= (enemy-posx (car rest)) -3.0)))
                                                (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time)))
