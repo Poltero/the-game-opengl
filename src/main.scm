@@ -72,6 +72,16 @@
       vector)))
 
 
+(define create-f32vector-for-player
+  (lambda (x y width height elemento)
+    (let ((vector 
+           (f32vector x y (* elemento 0.006) 0.0
+                      x (+ y height) (* elemento 0.006) 0.006
+                      (+ x width) (+ y height) (* (+ elemento 1) 0.006) 0.006
+                      (+ x width) y (* (+ elemento 1) 0.006) 0.0)))
+      vector)))
+
+
 (define set-element-in-vector!
   (lambda (index vector)
     (let recur ((count 0))
@@ -84,18 +94,16 @@
   (lambda (player camera start position)
     (set-element-in-vector!
      start
-     (create-f32vector! 
+     (create-f32vector-for-player 
       (exact->inexact (- (player-posx player) (if (not (eq? camera 'none)) (camera-position camera) 0)))
       (exact->inexact (player-posy player))
       (player-width player)
       (player-height player)
-      (case  position
+      (case position
         ((left)
          0.0)
         ((rigth)
-         1.0))
-      0.0
-      0.006))))
+         1.0))))))
 
 (define delete-of-type-tiles 
   (lambda (tiles type start)
