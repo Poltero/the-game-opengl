@@ -103,7 +103,11 @@
         ((left)
          0.0)
         ((rigth)
-         1.0))))))
+         1.0)
+        ((runleft)
+         2.0)
+        ((runrigth)
+         3.0))))))
 
 (define delete-of-type-tiles 
   (lambda (tiles type start)
@@ -889,31 +893,39 @@ end-of-shader
                                  (cond 
                                   ((= key SDLK_RIGHT)
                                    (if (eq? (world-gamestates world) 'gamescreen)
-                                       (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
-                                                               (make-player
-                                                                (player-posx (world-player world))
-                                                                (player-posy (world-player world))
-                                                                (player-width (world-player world))
-                                                                (player-height (world-player world))
-                                                                'none
-                                                                (player-hstate (world-player world))
-                                                                (player-score (world-player world)))
-                                                               (world-coins world)
-                                                               (world-enemies world)))))
+                                       (begin 
+                                         (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                                 (make-player
+                                                                  (player-posx (world-player world))
+                                                                  (player-posy (world-player world))
+                                                                  (player-width (world-player world))
+                                                                  (player-height (world-player world))
+                                                                  'none
+                                                                  (player-hstate (world-player world))
+                                                                  (player-score (world-player world)))
+                                                                 (world-coins world)
+                                                                 (world-enemies world)))
+                                         (set! position-texture-player 'rigth)
+                                         (set-player! 
+                                          (world-player world) (world-camera world) 0 position-texture-player))))
 
                                   ((= key SDLK_LEFT)
                                    (if (eq? (world-gamestates world) 'gamescreen)
-                                       (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
-                                                               (make-player
-                                                                (player-posx (world-player world))
-                                                                (player-posy (world-player world))
-                                                                (player-width (world-player world))
-                                                                (player-height (world-player world))
-                                                                'none
-                                                                (player-hstate (world-player world))
-                                                                (player-score (world-player world)))
-                                                               (world-coins world)
-                                                               (world-enemies world)))))
+                                       (begin 
+                                         (set! world (make-world (world-gamestates world) (world-tiles world) (world-camera world) 
+                                                                 (make-player
+                                                                  (player-posx (world-player world))
+                                                                  (player-posy (world-player world))
+                                                                  (player-width (world-player world))
+                                                                  (player-height (world-player world))
+                                                                  'none
+                                                                  (player-hstate (world-player world))
+                                                                  (player-score (world-player world)))
+                                                                 (world-coins world)
+                                                                 (world-enemies world)))
+                                         (set! position-texture-player 'left)
+                                         (set-player! 
+                                          (world-player world) (world-camera world) 0 position-texture-player))))
 
                                   ((= key SDLK_UP)
                                    (if (eq? (world-gamestates world) 'gamescreen)
@@ -1107,7 +1119,7 @@ end-of-shader
                             (if (not (check-collision-right-tiles player tiles))
                                 (begin
                                   (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
-                                  (set! position-texture-player 'left)
+                                  (set! position-texture-player 'runleft)
                                   (unless (eq? camera 'none)
                                           (if (eq? (camera-state camera) 'on)
                                               (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time)))))
@@ -1130,7 +1142,7 @@ end-of-shader
                             (if (not (check-collision-left-tiles player tiles))
                                 (begin
                                   (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
-                                  (set! position-texture-player 'rigth)
+                                  (set! position-texture-player 'runrigth)
                                   (unless (eq? camera 'none)
                                           (if (eq? (camera-state camera) 'on)
                                               (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))
@@ -1145,6 +1157,10 @@ end-of-shader
                                        (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world))))))
                                 (set-player! 
                                  player (world-camera world) 0 position-texture-player))))
+
+                      
+                      ;;Reset textures-position of player
+                      
                       
                       
                       ;;Manage states up's
