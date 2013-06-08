@@ -1,7 +1,7 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
 
-(define level-number 1)
+(define level-number 2)
 
 (define game-contents
   (call-with-input-file "LevelData.dat" (lambda (port) (read-all port))))
@@ -72,13 +72,22 @@
       vector)))
 
 
-(define create-f32vector-for-player
+(define create-f32vector-for-characters
   (lambda (x y width height elemento)
     (let ((vector 
            (f32vector x y (* elemento 0.006) 0.0
                       x (+ y height) (* elemento 0.006) 0.006
                       (+ x width) (+ y height) (* (+ elemento 1) 0.006) 0.006
                       (+ x width) y (* (+ elemento 1) 0.006) 0.0)))
+      vector)))
+
+(define create-f32vector-for-boss
+  (lambda (x y width height elemento factor)
+    (let ((vector 
+           (f32vector x y (* elemento 0.008) 0.008
+                      x (+ y height) (* elemento 0.008) (* 2.5 0.008)
+                      (+ x width) (+ y height) (* (+ elemento 1) (* factor 0.008)) (* 2.5 0.008)
+                      (+ x width) y (* (+ elemento 1) (* factor 0.008)) 0.008)))
       vector)))
 
 
@@ -94,7 +103,7 @@
   (lambda (player camera start position)
     (set-element-in-vector!
      start
-     (create-f32vector-for-player 
+     (create-f32vector-for-characters 
       (exact->inexact (- (player-posx player) (if (not (eq? camera 'none)) (camera-position camera) 0)))
       (exact->inexact (player-posy player))
       (player-width player)
@@ -159,42 +168,41 @@
   (lambda (enemies camera start)
     (let set-enemies-in-vector! ((rest enemies) (count start))
       (when (not (null? rest))
-            (set-element-in-vector!
-             count
-             (create-f32vector! 
-              (exact->inexact (- (enemy-posx (car rest)) (if (not (eq? camera 'none)) (camera-position camera) 0)))
-              (exact->inexact (enemy-posy (car rest)))
-              (enemy-width (car rest))
-              (enemy-height (car rest))
-              (if (not (eq? (enemy-direction (car rest)) 'none))
-                  (case (enemy-direction (car rest))
-                    ((left)
-                     6.5)
-                    ((right)
-                     7.6)
-                    (else
-                     5.7))
-                  (case (enemy-type (car rest))
-                    ((zanahoria)
-                     1.5)
-                    ((explossion)
-                     0.1)
-                    ((boss)
-                     0.1)
-                    (else
-                     6.6)))
-              (case (enemy-type (car rest))
-                ((zanahoria explossion)
-                 10.0)
-                ((boss)
-                 1.0)
-                (else
-                 0.0))
-              (case (enemy-type (car rest))
-                ((boss)
-                 0.020)
-                (else
-                 0.006))))
+            (case (enemy-type (car rest))
+              ((kamikaze defender)
+               (set-element-in-vector!
+                count
+                (create-f32vector-for-characters 
+                 (exact->inexact (- (enemy-posx (car rest)) (if (not (eq? camera 'none)) (camera-position camera) 0)))
+                 (exact->inexact (enemy-posy (car rest)))
+                 (enemy-width (car rest))
+                 (enemy-height (car rest))
+                 (case (enemy-direction (car rest))
+                   ((left)
+                    9.0)
+                   ((right)
+                    10.0)
+                   (else
+                    0.0)))))
+              ((boss)
+               (set-element-in-vector!
+                count
+                (create-f32vector-for-boss
+                 (exact->inexact (- (enemy-posx (car rest)) (if (not (eq? camera 'none)) (camera-position camera) 0)))
+                 (exact->inexact (enemy-posy (car rest)))
+                 (enemy-width (car rest))
+                 (enemy-height (car rest))
+                 (case (enemy-direction (car rest))
+                   ((leftlose)
+                    3.5)
+                   (else
+                    0.0))
+                 (case (enemy-direction (car rest))
+                   ((leftlose)
+                    1.2)
+                   (else
+                    1.8))))))
+            
             (set-enemies-in-vector! (cdr rest) (+ count 1))))))
 
 (define set-coins! 
@@ -623,7 +631,7 @@
             ((x)
              (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 60.0 60.0 10 'defender 'right) rest)))
             ((b)
-             (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 80.0 80.0 10 'boss 'none) rest))))
+             (set! rest (cons (make-enemy (exact->inexact (* count-x 40.0)) (exact->inexact (* count-y 40.0)) 110.0 110.0 10 'boss 'none) rest))))
           (if (< count-x 31)
               (loop rest-map rest (+ count-x 1) count-y)
               (loop rest-map rest 0 (+ count-y 1))))
@@ -1259,6 +1267,7 @@ end-of-shader
                                        (enemy-type-set! (car rest) 'none)
                                        (delete-of-type-tiles (world-tiles world) 'normal 1))
                                       
+                                      
                                       ((zanahoria)
                                        (if (>= (player-score (world-player world)) (cdr (assq 'points-win-boss level-contents)))
                                            (if (and (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
@@ -1268,6 +1277,9 @@ end-of-shader
                                        (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
 
                                       ((boss)
+                                       (if (>= (player-score (world-player world)) (cdr (assq 'points-win-boss level-contents)))
+                                           (enemy-direction-set! (car rest) 'leftlose))
+                                       
                                        (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
                                            (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
                                        (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
