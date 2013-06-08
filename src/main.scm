@@ -45,6 +45,14 @@
                                                                  1280.0 (+ 0.0 750) (* 0.25 (+ px 1)) 0.535
                                                                  1280.0 0.0 (* 0.25 (+ px 1)) 0.39))))))
 
+(define add-background-level-screen (lambda (px)
+                        (set! vertex-data-vector 
+                        (f32vector-append vertex-data-vector 
+                                          (list->f32vector (list 0.5 0.0 (* px 0.25) 0.39
+                                                                 0.5 (+ 0.0 750) (* px 0.25) 0.535
+                                                                 1280.0 (+ 0.0 750) (* 0.25 (+ px 1)) 0.535
+                                                                 1280.0 0.0 (* 0.25 (+ px 1)) 0.39))))))
+
 
 
 
@@ -89,6 +97,15 @@
                       x (+ y height) (* elemento 0.008) (* 2.5 0.008)
                       (+ x width) (+ y height) (* (+ elemento 1) (* factor 0.008)) (* 2.5 0.008)
                       (+ x width) y (* (+ elemento 1) (* factor 0.008)) 0.008)))
+      vector)))
+
+(define create-f32vector-for-background
+  (lambda (px)
+    (let ((vector
+           (f32vector 0.5 0.0 (* px 0.25) 0.1
+                      0.5 (+ 0.0 750) (* px 0.25) 0.235
+                      1280.0 (+ 0.0 750) (* 0.25 (+ px 1)) 0.235
+                      1280.0 0.0 (* 0.25 (+ px 1)) 0.1)))
       vector)))
 
 
@@ -965,7 +982,7 @@ end-of-shader
                                                                  (world-enemies world)))
                                          (set! position-texture-player 'rigth)
                                          (set-player! 
-                                          (world-player world) (world-camera world) 0 position-texture-player))))
+                                          (world-player world) (world-camera world) 1 position-texture-player))))
 
                                   ((= key SDLK_LEFT)
                                    (if (eq? (world-gamestates world) 'gamescreen)
@@ -983,7 +1000,7 @@ end-of-shader
                                                                  (world-enemies world)))
                                          (set! position-texture-player 'left)
                                          (set-player! 
-                                          (world-player world) (world-camera world) 0 position-texture-player))))
+                                          (world-player world) (world-camera world) 1 position-texture-player))))
 
                                   ((= key SDLK_UP)
                                    (if (eq? (world-gamestates world) 'gamescreen)
@@ -1023,19 +1040,25 @@ end-of-shader
                          (set! vertex-data-vector (make-f32vector (* (+ (length (world-tiles world))
                                                                         (length (world-coins world))
                                                                         (length (world-enemies world))
-                                                                        1)
+                                                                        2)
                                                                      16)
                                                                   0.0))
                          
                          
+                         
+                         (set-element-in-vector!
+                          0
+                          (create-f32vector-for-background
+                           0.0))
+                         
                          ;;Inicializar todos los datos del vector
                          
-                         (let* ((count 0) 
+                         (let* ((count 1) 
                                 (player (world-player world)) 
                                 (tiles (world-tiles world)) 
                                 (enemies (world-enemies world)) 
                                 (coins (world-coins world)))
-                       
+                           
                            (set-element-in-vector! 
                             count 
                             (create-f32vector!
@@ -1050,12 +1073,12 @@ end-of-shader
                            
 
                            (set-tiles! 
-                            tiles (world-camera world) 1)
+                            tiles (world-camera world) 2)
                            
                            (set-enemies! 
-                            enemies (world-camera world) (+ (length tiles) 1))
+                            enemies (world-camera world) (+ (length tiles) 2))
                            (set-coins! 
-                            coins (world-camera world) (+ (length tiles) (length enemies) 1)))
+                            coins (world-camera world) (+ (length tiles) (length enemies) 2)))
                          
                          (set! logic-states 'none)
                          (set! location-states 'level-game)
@@ -1096,7 +1119,7 @@ end-of-shader
                        
 
                            (set-player! 
-                                   player (world-camera world) 0 'rigth)
+                                   player (world-camera world) 1 'rigth)
                            
                            (set-tiles! 
                             tiles (world-camera world) 1)
@@ -1183,14 +1206,14 @@ end-of-shader
                                   
                                   
                                   (set-player! 
-                                   player camera 0 position-texture-player)
+                                   player camera 1 position-texture-player)
                                   (set-tiles!
-                                   tiles camera 1)
+                                   tiles camera 2)
                                   (if (not (eq? (world-coins world) 'none)) 
                                       (set-coins!
-                                       (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world))))))
+                                       (world-coins world) camera (+ (length (world-tiles world)) 2 (length (world-enemies world))))))
                                 (set-player! 
-                                 player (world-camera world) 0 position-texture-player))))
+                                 player (world-camera world) 1 position-texture-player))))
                       
                       
                       ;;Move player to right
@@ -1206,14 +1229,14 @@ end-of-shader
                                   
                                   
                                   (set-player! 
-                                   player camera 0 position-texture-player)
+                                   player camera 1 position-texture-player)
                                   (set-tiles!
-                                   tiles camera 1)
+                                   tiles camera 2)
                                   (if (not (eq? (world-coins world) 'none))
                                       (set-coins!
-                                       (world-coins world) camera (+ (length (world-tiles world)) 1 (length (world-enemies world))))))
+                                       (world-coins world) camera (+ (length (world-tiles world)) 2 (length (world-enemies world))))))
                                 (set-player! 
-                                 player (world-camera world) 0 position-texture-player))))
+                                 player (world-camera world) 1 position-texture-player))))
 
                       
                       ;;Reset textures-position of player
@@ -1232,7 +1255,7 @@ end-of-shader
                             (if (not (check-collision-top (world-player world) (world-tiles world)))      
                                 (begin
                                   (player-posy-set! player (- (player-posy player) (* 0.3 delta-time)))
-                                  (set-player! (world-player world) (world-camera world) 0 position-texture-player))
+                                  (set-player! (world-player world) (world-camera world) 1 position-texture-player))
                                 (player-hstate-set! (world-player world) 'down))))
                       
 
@@ -1242,8 +1265,8 @@ end-of-shader
                             (if (not (check-collision-bottom (world-player world) (world-tiles world)))
                                 (begin
                                   (player-posy-set! player (+ (player-posy player) (* 0.3 delta-time)))
-                                  (set-player! (world-player world) (world-camera world) 0 position-texture-player)) 
-                                (set-player! player (world-camera world) 0 position-texture-player))))
+                                  (set-player! (world-player world) (world-camera world) 1 position-texture-player)) 
+                                (set-player! player (world-camera world) 1 position-texture-player))))
                       
                       ;;(pp (check-collision-bottom (world-player world) (world-tiles world)))
                       
@@ -1259,9 +1282,9 @@ end-of-shader
                           (when (eq? (camera-state (world-camera world)) 'auto)
                                 (camera-position-set! 
                                  (world-camera world) (+ (camera-position (world-camera world)) (* (camera-speed (world-camera world)) delta-time)))
-                                (set-player! (world-player world) (world-camera world) 0 position-texture-player)
-                                (set-tiles! (world-tiles world) (world-camera world) 1)
-                                (set-coins! (world-coins world) (world-camera world) (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
+                                (set-player! (world-player world) (world-camera world) 1 position-texture-player)
+                                (set-tiles! (world-tiles world) (world-camera world) 2)
+                                (set-coins! (world-coins world) (world-camera world) (+ (length (world-tiles world)) 2 (length (world-enemies world)))))
                           
                           
                           
@@ -1277,7 +1300,7 @@ end-of-shader
                       ;Calculate collision with coins
                       (if (not (eq? (world-coins world) 'none))
                           (update-player-points-for-take-coin 
-                           (world-player world) (world-coins world) (+ (length (world-tiles world)) 1 (length (world-enemies world)))))
+                           (world-player world) (world-coins world) (+ (length (world-tiles world)) 2 (length (world-enemies world)))))
                       
                       
                       
@@ -1296,7 +1319,7 @@ end-of-shader
                                                   (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
                                            (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time))))
                                        
-                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
+                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 2)))
                                       
                                       ((defender)
                                        (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
@@ -1310,7 +1333,7 @@ end-of-shader
                                            (if (eq? (enemy-direction (car rest)) 'left)
                                                (enemy-posx-set! (car rest) (- (enemy-posx (car rest)) (* 0.1 delta-time)))))
                                        
-                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
+                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 2)))
                                       ((explossion)
                                        (enemy-posx-set! (car rest) -50.0)
                                        (enemy-type-set! (car rest) 'none)
@@ -1323,7 +1346,7 @@ end-of-shader
                                                     (not (= (enemy-posx (car rest)) -3.0)))
                                                (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time)))
                                                (enemy-type-set! (car rest) 'explossion)))
-                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))
+                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 2)))
 
                                       ((boss)
                                        (if (>= (player-score (world-player world)) (cdr (assq 'points-win-boss level-contents)))
@@ -1331,7 +1354,7 @@ end-of-shader
                                        
                                        (if (not (check-collision-bottom-enemy (car rest) (world-tiles world)))
                                            (enemy-posy-set! (car rest) (+ (enemy-posy (car rest)) (* 0.1 delta-time))))
-                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 1)))))
+                                       (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 2)))))
                               
                               
                               (process-enemies (cdr rest))))
