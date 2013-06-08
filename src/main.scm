@@ -14,6 +14,7 @@
 
 
 (define logic-states 'none)
+(define location-states 'none)
 
 ;Vars of control time
 (define delta-time 0)
@@ -932,7 +933,9 @@ end-of-shader
                                        
                                        ((= key SDLK_RETURN)
                                         (when (or (eq? (world-gamestates world) 'splashscreen) (eq? (world-gamestates world) 'lose))
-                                              (set! logic-states 'start-level-game))
+                                              (if (eq? location-states 'level-boss)
+                                                  (set! logic-states 'start-level-boss)
+                                                  (set! logic-states 'start-level-game)))
                                         (when (eq? (world-gamestates world) 'none)
                                               (world-gamestates-set! world 'credits)))
                                        
@@ -1055,12 +1058,10 @@ end-of-shader
                             coins (world-camera world) (+ (length tiles) (length enemies) 1)))
                          
                          (set! logic-states 'none)
+                         (set! location-states 'level-game)
+                         
                      
                          ;;Empieza la musica de fondo
-
-                         
-                         
-                         
 
                          (set! background-music* (or (Mix_LoadMUS (string-append "assets/background" (number->string level-number) ".ogg"))
                                                  (fusion:error (string-append "Unable to load OGG music -- " (Mix_GetError)))))
@@ -1103,6 +1104,7 @@ end-of-shader
                            )
 
                          (set! logic-states 'none)
+                         (set! location-states 'level-boss)
 
 
                          (set! background-music* (or (Mix_LoadMUS "assets/background-boss.ogg")
@@ -1131,7 +1133,7 @@ end-of-shader
                       
                       (set! vertex-data-vector '#f32())
                       
-                      (if (eq? (world-camera world) 'none)
+                      (if (eq? location-states 'level-boss)
                           (if (< level-number 2)
                               (begin (set! logic-states 'start-level-game)
                                      (set! level-number (+ level-number 1)))
