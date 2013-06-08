@@ -1,7 +1,7 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
 
-(define level-number 2)
+(define level-number 1)
 
 (define game-contents
   (call-with-input-file "LevelData.dat" (lambda (port) (read-all port))))
@@ -91,6 +91,16 @@
       vector)))
 
 
+(define create-f32vector-for-tiles
+  (lambda (x y width height elemento factor)
+    (let ((vector 
+           (f32vector x y (* elemento 0.07) 0.07
+                      x (+ y height) (* elemento 0.07) (* 1.12 0.07)
+                      (+ x width) (+ y height) (* (+ elemento 1) (* factor 0.07)) (* 1.12 0.07)
+                      (+ x width) y (* (+ elemento 1) (* factor 0.07)) 0.07)))
+      vector)))
+
+
 (define set-element-in-vector!
   (lambda (index vector)
     (let recur ((count 0))
@@ -153,14 +163,14 @@
                 ((left-normal)
                  6.4)
                 ((rigth-normal)
-                 8.8)
+                 10.4)
                 ((unique)
-                 11.5)
+                 12.0)
                 ((enemy)
-                 10.0)
+                 11.8)
                 ((with-coins)
-                 11.5))
-              12.0
+                 13.1))
+              11.8
               0.006))
             (set-tiles-in-vector! (cdr rest) (+ count 1))))))
 
@@ -183,7 +193,7 @@
                    ((right)
                     10.0)
                    (else
-                    0.0)))))
+                    9.0)))))
               ((boss)
                (set-element-in-vector!
                 count
@@ -201,7 +211,40 @@
                    ((leftlose)
                     1.2)
                    (else
-                    1.8))))))
+                    1.8)))))
+              ((zanahoria)
+               (set-element-in-vector!
+                count
+                (create-f32vector!
+                 (exact->inexact (- (enemy-posx (car rest)) (if (not (eq? camera 'none)) (camera-position camera) 0)))
+                 (exact->inexact (enemy-posy (car rest)))
+                 (enemy-width (car rest))
+                 (enemy-height (car rest))
+                 3.5
+                 11.8
+                 0.006)))
+              ((explossion)
+               (set-element-in-vector!
+                count
+                (create-f32vector!
+                 (exact->inexact (- (enemy-posx (car rest)) (if (not (eq? camera 'none)) (camera-position camera) 0)))
+                 (exact->inexact (enemy-posy (car rest)))
+                 (enemy-width (car rest))
+                 (enemy-height (car rest))
+                 0.0
+                 11.8
+                 0.006)))
+              (else
+               (set-element-in-vector!
+                count
+                (create-f32vector!
+                 (exact->inexact (- (enemy-posx (car rest)) (if (not (eq? camera 'none)) (camera-position camera) 0)))
+                 (exact->inexact (enemy-posy (car rest)))
+                 (enemy-width (car rest))
+                 (enemy-height (car rest))
+                 0.0
+                 0.0
+                 0.0))))
             
             (set-enemies-in-vector! (cdr rest) (+ count 1))))))
 
@@ -216,9 +259,13 @@
               (exact->inexact (coin-posy (car rest)))
               (coin-width (car rest))
               (coin-height (car rest))
-              0.1
-              9.0
-              0.014))
+              (case (coin-color (car rest))
+                ((yellow)
+                 1.9)
+                ((green)
+                 2.9))
+              12.9
+              0.005))
             (set-coins-in-vector! (cdr rest) (+ count 1))))))
 
 
@@ -966,7 +1013,7 @@ end-of-shader
                                       'gamescreen
                                       (create-tiles-map (world-tiles world))
                                       (make-camera 0.0 (cdr (assq 'camera level-contents)) 0.1)
-                                      (make-player 400.0 430.0 40.0 40.0 'none 'down 0)
+                                      (make-player 400.0 430.0 30.0 30.0 'none 'down 0)
                                       (create-coins-map (world-coins world))
                                       (create-enemies-map (world-enemies world))))
                          
@@ -1030,7 +1077,7 @@ end-of-shader
                                       'gamescreen
                                       (create-map-boss (world-tiles world))
                                       'none
-                                      (make-player 400.0 430.0 30.0 30.0 'none 'down 0)
+                                      (make-player 400.0 430.0 40.0 40.0 'none 'down 0)
                                       'none
                                       (create-enemies-boss (world-enemies world))))
 
