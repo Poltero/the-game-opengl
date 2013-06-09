@@ -1081,6 +1081,8 @@ end-of-shader
                           0
                           (create-f32vector-for-background
                            (+ -1.0 level-number 0.04)))
+
+                         
                          
                          ;;Inicializar todos los datos del vector
                          
@@ -1110,12 +1112,14 @@ end-of-shader
                             enemies (world-camera world) (+ (length tiles) 2))
                            (set-coins! 
                             coins (world-camera world) (+ (length tiles) (length enemies) 2))
-
+                                   
                            
                            ;;Set enemies to kill
 
                            (set-enemies! 
                             list-enemies-to-kill 'none (+ (length tiles) 2 (length enemies) (length coins))))
+
+                         (pp "puta que te pario...")
                          
                          (set! logic-states 'none)
                          (set! location-states 'level-game)
@@ -1195,6 +1199,8 @@ end-of-shader
                       (world-tiles-set! world '())
                       (world-enemies-set! world '())
                       (world-coins-set! world '())
+
+                      (set! list-enemies-to-kill '())
                       
                       (set! vertex-data-vector '#f32())
                       
