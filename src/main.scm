@@ -45,6 +45,14 @@
                                                                  1280.0 (+ 0.0 750) (* 0.25 (+ px 1)) 0.535
                                                                  1280.0 0.0 (* 0.25 (+ px 1)) 0.39))))))
 
+(define add-background-final-screen (lambda (px)
+                        (set! vertex-data-vector 
+                        (f32vector-append vertex-data-vector 
+                                          (list->f32vector (list 0.5 0.0 (* px 0.25) 0.55
+                                                                 0.5 (+ 0.0 750) (* px 0.25) 0.735
+                                                                 1280.0 (+ 0.0 750) (* 0.25 (+ px 1)) 0.735
+                                                                 1280.0 0.0 (* 0.25 (+ px 1)) 0.55))))))
+
 (define add-background-level-screen (lambda (px)
                         (set! vertex-data-vector 
                         (f32vector-append vertex-data-vector 
@@ -889,14 +897,6 @@ end-of-shader
             
             
             
-
-            
-
-            
-            
-            
-            ;;(pp (vector-length (vector-ref world-map 0)))
-            
             ;; Game loop
             (let ((event* (alloc-SDL_Event)))
               (call/cc
@@ -968,6 +968,12 @@ end-of-shader
                                                   (set! logic-states 'start-level-game)))
                                         (when (eq? (world-gamestates world) 'none)
                                               (world-gamestates-set! world 'credits)))
+
+                                       ((= key SDLK_i)
+                                        (if (eq? (world-gamestates world) 'splashscreen)
+                                            (world-gamestates-set! world 'intructions)
+                                            (if (eq? (world-gamestates world) 'intructions)
+                                                (world-gamestates-set! world 'splashscreen))))
                                        
                                        
                                        (else
@@ -1040,7 +1046,6 @@ end-of-shader
                          (set-level-contents! level-number)
                          (set! max-count-x (- (vector-length (vector-ref (cdr (assq 'map level-contents)) 0)) 1))
                          
-                         ;(pp (cdr (assq 'camera level-contents)))
                      
                          (set! world (make-world 
                                       'gamescreen
@@ -1118,8 +1123,6 @@ end-of-shader
 
                            (set-enemies! 
                             list-enemies-to-kill 'none (+ (length tiles) 2 (length enemies) (length coins))))
-
-                         (pp "puta que te pario...")
                          
                          (set! logic-states 'none)
                          (set! location-states 'level-game)
@@ -1168,9 +1171,7 @@ end-of-shader
                                    player (world-camera world) 1 'rigth)
                            
                            (set-tiles! 
-                            tiles (world-camera world) 2)
-                           
-                           )
+                            tiles (world-camera world) 2))
 
                          (set! logic-states 'none)
                          (set! location-states 'level-boss)
@@ -1208,7 +1209,7 @@ end-of-shader
                           (if (< level-number 2)
                               (begin (set! logic-states 'start-level-game)
                                      (set! level-number (+ level-number 1)))
-                              (begin (add-background-menu-screen 3.93)
+                              (begin (add-background-final-screen 0.0)
                                      (world-gamestates-set! world 'none)))
                           (set! logic-states 'start-level-boss))
                       
@@ -1227,13 +1228,14 @@ end-of-shader
 
 
                       ;; Stop music
-                      (Mix_FadeOutMusic 1000)
-                      
-                      )
+                      (Mix_FadeOutMusic 1000))
 
                      ((credits)
                       
-                      (add-background-menu-screen 4.89))
+                      (add-background-final-screen 1.055))
+
+                     ((intructions)
+                      (add-background-menu-screen 1.05))
 
                      
                      ((gamescreen)
@@ -1394,7 +1396,7 @@ end-of-shader
                                        
                                        (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 2)))
                                       ((explossion)
-                                       (enemy-posx-set! (car rest) -50.0)
+                                       (enemy-posx-set! (car rest) -150.0)
                                        (enemy-type-set! (car rest) 'none)
                                        (delete-of-type-tiles (world-tiles world) 'normal 1))
                                       
