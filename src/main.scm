@@ -70,6 +70,9 @@
 (define number-of-coins 0)
 (define max-count-x 0)
 
+(define number-enemies-to-kill 0)
+(define list-enemies-to-kill '())
+
 
 (define create-f32vector!
   (lambda (x y width height px py factor)
@@ -346,6 +349,16 @@
     (coin-posy-set! coin 0.0)
     (coin-width-set! coin 0.0)
     (coin-height-set! coin 0.0)))
+
+
+(define take-off-list-enemies-to-kill
+  (lambda ()
+    (let loop ((rest list-enemies-to-kill))
+      (if (not (= (enemy-posx (car rest)) -50.0))
+          (begin
+            (enemy-posx-set! (car rest) -50.0))
+          (loop (cdr rest))))
+    (set! number-enemies-to-kill (- number-enemies-to-kill 1))))
 
 (define check-player-crash-enemy
   (lambda (player enemies)
@@ -1036,20 +1049,38 @@ end-of-shader
                                       (make-player 400.0 430.0 30.0 30.0 'none 'down 0)
                                       (create-coins-map (world-coins world))
                                       (create-enemies-map (world-enemies world))))
+
+                         ;;Number of enemies to kill
+                         (set! number-enemies-to-kill (cdr (assq 'number-enemies-to-kill level-contents)))
                          
                          (set! vertex-data-vector (make-f32vector (* (+ (length (world-tiles world))
                                                                         (length (world-coins world))
                                                                         (length (world-enemies world))
+                                                                        number-enemies-to-kill
                                                                         2)
                                                                      16)
                                                                   0.0))
                          
+                         ;;Create list enemies to kill
+                         (let loop ((count 1))
+                           (if (<=  count number-enemies-to-kill)
+                               (begin 
+                                 (set! list-enemies-to-kill 
+                                       (cons (make-enemy 
+                                              (* 30.0 count) 
+                                              570.0 
+                                              30.0 
+                                              30.0 
+                                              10 
+                                              'kamikaze 
+                                              'none) list-enemies-to-kill))
+                                 (loop (+ count 1)))))
                          
                          
                          (set-element-in-vector!
                           0
                           (create-f32vector-for-background
-                           (+ -1.0 level-number 0.05)))
+                           (+ -1.0 level-number 0.04)))
                          
                          ;;Inicializar todos los datos del vector
                          
@@ -1078,7 +1109,13 @@ end-of-shader
                            (set-enemies! 
                             enemies (world-camera world) (+ (length tiles) 2))
                            (set-coins! 
-                            coins (world-camera world) (+ (length tiles) (length enemies) 2)))
+                            coins (world-camera world) (+ (length tiles) (length enemies) 2))
+
+                           
+                           ;;Set enemies to kill
+
+                           (set-enemies! 
+                            list-enemies-to-kill 'none (+ (length tiles) 2 (length enemies) (length coins))))
                          
                          (set! logic-states 'none)
                          (set! location-states 'level-game)
@@ -1179,6 +1216,8 @@ end-of-shader
                       (world-tiles-set! world '())
                       (world-enemies-set! world '())
                       (world-coins-set! world '())
+                      
+                      (set! list-enemies-to-kill '())
 
 
                       ;; Stop music
@@ -1298,8 +1337,11 @@ end-of-shader
                               (camera-position-set! (world-camera world) 0))
                           
                           
+                          ;;Win player
                           (if (> (camera-position (world-camera world)) (- level-final 640))
-                              (world-gamestates-set! world 'win)))
+                              (if (> number-enemies-to-kill 0)
+                                  (world-gamestates-set! world 'lose)
+                                  (world-gamestates-set! world 'win))))
                       
                       
                       ;Calculate collision with coins
@@ -1387,8 +1429,18 @@ end-of-shader
                                                0.0
                                                0.0
                                                0.0))
+                                             (when (> number-enemies-to-kill 0)
+                                                   (take-off-list-enemies-to-kill)
+                                                   (set-enemies!
+                                                    list-enemies-to-kill 
+                                                    'none 
+                                                    (+ (length (world-tiles world)) 
+                                                       2 
+                                                       (length (world-enemies world)) 
+                                                       (length (world-coins world)))))
                                              (if (eq? (enemy-type (car rest)) 'boss)
                                                  (world-gamestates-set! world 'win))
+                                             (set-enemies! (world-enemies world) (world-camera world) (+ (length (world-tiles world)) 2))
                                              (kill-enemies (cdr rest) (+ count 1)))
                                            (kill-enemies (cdr rest) (+ count 1)))))
                                 (kill-enemies (cdr rest) (+ count 1))))
