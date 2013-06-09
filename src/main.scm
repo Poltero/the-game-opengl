@@ -179,7 +179,7 @@
                 ((normal)
                  7.0)
                 ((left-normal)
-                 6.4)
+                 6.5)
                 ((rigth-normal)
                  10.4)
                 ((unique)
@@ -279,10 +279,10 @@
               (coin-height (car rest))
               (case (coin-color (car rest))
                 ((yellow)
-                 1.9)
+                 1.95)
                 ((green)
                  2.9))
-              12.9
+              13.0
               0.005))
             (set-coins-in-vector! (cdr rest) (+ count 1))))))
 
@@ -1049,7 +1049,7 @@ end-of-shader
                          (set-element-in-vector!
                           0
                           (create-f32vector-for-background
-                           0.0))
+                           (+ -1.0 level-number 0.05)))
                          
                          ;;Inicializar todos los datos del vector
                          
@@ -1107,9 +1107,14 @@ end-of-shader
 
                          (set! vertex-data-vector (make-f32vector (* (+ (length (world-tiles world))
                                                                         (length (world-enemies world))
-                                                                        1)
+                                                                        2)
                                                                      16)
                                                                   0.0))
+                         
+                         (set-element-in-vector!
+                          0
+                          (create-f32vector-for-background
+                           (+ -1.0 level-number 0.05)))
 
                          (let* ((count 0) 
                                 (player (world-player world)) 
@@ -1122,7 +1127,7 @@ end-of-shader
                                    player (world-camera world) 1 'rigth)
                            
                            (set-tiles! 
-                            tiles (world-camera world) 1)
+                            tiles (world-camera world) 2)
                            
                            )
 
