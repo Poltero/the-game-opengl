@@ -466,8 +466,8 @@
                                     (leftA (player-posx player))
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
-                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (>= rightA (- leftB 13)) (<= leftA leftB))
-                    (player-posx-set! player (- leftB 31))
+                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (>= rightA (+ leftB 2)) (<= leftA leftB))
+                    #t
                     (loop (cdr rest))))))))
 
 (define check-collision-right-tiles
@@ -483,8 +483,8 @@
                                     (leftA (player-posx player))
                                     (topB (tile-posy (car rest)))
                                     (bottomB (+ (tile-posy (car rest)) (tile-height (car rest)))))
-                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (+ rightB 13)) (>= leftA leftB))
-                    (player-posx-set! player (+ rightB 1))
+                (if (and  (>= bottomA (+ topB 5)) (<= topA bottomB) (<= leftA (- rightB 2)) (>= leftA leftB))
+                    #t
                     (loop (cdr rest))))))))
 
 ;;Collsion tiles left of enemy
@@ -1240,47 +1240,53 @@ end-of-shader
                       ;;Move player to left
                       (let* ((player (world-player world)) (tiles (world-tiles world)) (camera (world-camera world)))
                         (if (eq? (player-vstate (world-player world)) 'left)
-                            (if (not (check-collision-right-tiles player tiles))
-                                (begin
-                                  (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
-                                  (set! position-texture-player 'runleft)
-                                  (unless (eq? camera 'none)
-                                          (if (eq? (camera-state camera) 'on)
-                                              (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time)))))
-                                  
-                                  
-                                  (set-player! 
-                                   player camera 1 position-texture-player)
-                                  (set-tiles!
-                                   tiles camera 2)
-                                  (if (not (eq? (world-coins world) 'none)) 
-                                      (set-coins!
-                                       (world-coins world) camera (+ (length (world-tiles world)) 2 (length (world-enemies world))))))
-                                (set-player! 
-                                 player (world-camera world) 1 position-texture-player))))
+                            (begin
+                              (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
+                              (set! position-texture-player 'runleft)
+                              (unless (eq? camera 'none)
+                                      (if (eq? (camera-state camera) 'on)
+                                          (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time)))))
+                              
+                              (when (check-collision-right-tiles player tiles)
+                                    (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
+                                    (unless (eq? camera 'none)
+                                      (if (eq? (camera-state camera) 'on)
+                                          (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time))))))
+                              (set-player! 
+                               player camera 1 position-texture-player)
+                              (set-tiles!
+                               tiles camera 2)
+                              (if (not (eq? (world-coins world) 'none)) 
+                                  (set-coins!
+                                   (world-coins world) camera (+ (length (world-tiles world)) 2 (length (world-enemies world)))))
+                              (set-player! 
+                               player (world-camera world) 1 position-texture-player))))
                       
                       
                       ;;Move player to right
                       (let* ((player (world-player world)) (tiles (world-tiles world)) (camera (world-camera world)))
                         (if (eq? (player-vstate player) 'right)
-                            (if (not (check-collision-left-tiles player tiles))
-                                (begin
-                                  (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
-                                  (set! position-texture-player 'runrigth)
-                                  (unless (eq? camera 'none)
-                                          (if (eq? (camera-state camera) 'on)
-                                              (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))
-                                  
-                                  
-                                  (set-player! 
-                                   player camera 1 position-texture-player)
-                                  (set-tiles!
-                                   tiles camera 2)
-                                  (if (not (eq? (world-coins world) 'none))
-                                      (set-coins!
-                                       (world-coins world) camera (+ (length (world-tiles world)) 2 (length (world-enemies world))))))
-                                (set-player! 
-                                 player (world-camera world) 1 position-texture-player))))
+                            (begin
+                              (player-posx-set! player (+ (player-posx player) (* 0.3 delta-time)))
+                              (set! position-texture-player 'runrigth)
+                              (unless (eq? camera 'none)
+                                      (if (eq? (camera-state camera) 'on)
+                                          (camera-position-set! camera (+ (camera-position camera) (* 0.3 delta-time)))))
+                              
+                              (when (check-collision-left-tiles player tiles)
+                                    (player-posx-set! player (- (player-posx player) (* 0.3 delta-time)))
+                                    (unless (eq? camera 'none)
+                                      (if (eq? (camera-state camera) 'on)
+                                          (camera-position-set! camera (- (camera-position camera) (* 0.3 delta-time))))))
+                              (set-player! 
+                               player camera 1 position-texture-player)
+                              (set-tiles!
+                               tiles camera 2)
+                              (if (not (eq? (world-coins world) 'none))
+                                  (set-coins!
+                                   (world-coins world) camera (+ (length (world-tiles world)) 2 (length (world-enemies world))))))
+                            (set-player! 
+                             player (world-camera world) 1 position-texture-player)))
 
                       
                       ;;Reset textures-position of player
