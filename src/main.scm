@@ -1,8 +1,10 @@
 ;;; Copyright (c) 2013 by Álvaro Castro Castilla
 ;;; OpenGL 2.1 2d skeleton
 
+;;Current Level
 (define level-number 1)
 
+;;Method content of game in the file
 (define game-contents
   (call-with-input-file "LevelData.dat" (lambda (port) (read-all port))))
 
@@ -13,30 +15,30 @@
     (set! level-contents (cdr (assq level game-contents)))))
 
 
+;;Estados para controlar los diferentes sitios de la logica (de nivel, de bosses, etc)
 (define logic-states 'none)
+
+;;Estados que controlan donde se encuentra el jugador (en un nivel normal o luchando contro un jefe final)
 (define location-states 'none)
 
 ;Vars of control time
 (define delta-time 0)
 (define last-time 0)
 
-;Level dimension
-(define level-width 100000.0)
-(define level-height 400.0)
-
+;;Indica la posicion del final de cada nivel (cargado desde los mapas)
 (define level-final 0)
+
 
 ;Global position origin y
 (define position-y-origin 0)
 
-
+;;Vars of dimession screen
 (define screen-width 1280.0)
 (define screen-height 752.0)
 
-(define max-jump 'none)
 
 
-
+;;Add backgrounds
 (define add-background-menu-screen (lambda (px)
                         (set! vertex-data-vector 
                         (f32vector-append vertex-data-vector 
@@ -53,35 +55,29 @@
                                                                  1280.0 (+ 0.0 750) (* 0.25 (+ px 1)) 0.735
                                                                  1280.0 0.0 (* 0.25 (+ px 1)) 0.55))))))
 
-(define add-background-level-screen (lambda (px)
-                        (set! vertex-data-vector 
-                        (f32vector-append vertex-data-vector 
-                                          (list->f32vector (list 0.5 0.0 (* px 0.25) 0.39
-                                                                 0.5 (+ 0.0 750) (* px 0.25) 0.535
-                                                                 1280.0 (+ 0.0 750) (* 0.25 (+ px 1)) 0.535
-                                                                 1280.0 0.0 (* 0.25 (+ px 1)) 0.39))))))
 
 
-
-
+;;Estructuras del juego
 (define-structure tile posx posy width height type)
 (define-structure camera position state speed)
 (define-structure enemy posx posy width height points type direction)
 (define-structure player posx posy width height vstate hstate score)
 (define-structure coin posx posy width height points color)
 (define-structure world gamestates tiles camera player coins enemies)
+
+;;Vector de datos para opengl
 (define vertex-data-vector '#f32())
 
-;; Vars of number elements
-(define number-of-tiles 0)
-(define number-of-enemies 0)
-(define number-of-coins 0)
+;;Contador del maximo valor que puede tomar la x recorriendo los mapas
 (define max-count-x 0)
 
+;;Vars of enemies to kill from win
 (define number-enemies-to-kill 0)
 (define list-enemies-to-kill '())
 
 
+
+;;Metodos para insertar datos en el vector
 (define create-f32vector!
   (lambda (x y width height px py factor)
     (let ((vector 
